@@ -224,7 +224,6 @@
                                     <el-cascader
                                         v-model="cascaderNode"
                                         :options="cascaderClassMethod"
-                                        @visible-change="praseClassMethod"
                                         @change="selectNode">
                                     </el-cascader>
                                 </el-form-item>
@@ -403,7 +402,7 @@
                 selectednode:'',
                 newnode:'',
                 selectednodetype:'',
-                classMethodMap:{"a": ["a","b"], "b": ["a","c"]},
+                classMethodMap:{},
                 testCaseMap:{},
                 g:{},
                 tempTrans: d3.zoomIdentity.translate(0, 0).scale(1),
@@ -438,8 +437,23 @@
                 isRecording:false,    // 是否正在录制
                 isplay:true,
                 playandpause:'暂停',
-                cascaderClassMethod:[],  // 添加节点板块的级联选择，已有节点
                 cascaderNode:[],
+            }
+        },
+        computed:{
+            cascaderClassMethod(){  // 添加节点板块的级联选择，已有节点
+                let ans=[];
+                Object.entries(this.classMethodMap).forEach(keyValue=>{
+                        ans.push({
+                            value: keyValue[0],
+                            label: keyValue[0],
+                            children: keyValue[1].map((value)=>{return {
+                                value,
+                                label: value,
+                            }})
+                        })
+                    });
+                    return ans;
             }
         },
         methods: {
@@ -887,19 +901,19 @@
                 this.g.attr('transform', trans)
             },
             // 把 this.classMethodMap 解析成 cascader 格式的 ClassMethod 
-            praseClassMethod(){
-                if(!this.cascaderClassMethod.length)
-                    Object.entries(this.classMethodMap).forEach(keyValue=>{
-                        this.cascaderClassMethod.push({
-                            value: keyValue[0],
-                            label: keyValue[0],
-                            children: keyValue[1].map((value)=>{return {
-                                value,
-                                label: value,
-                            }})
-                        })
-                    })
-            },
+            // praseClassMethod(){
+            //     if(!this.cascaderClassMethod.length)
+            //         Object.entries(this.classMethodMap).forEach(keyValue=>{
+            //             this.cascaderClassMethod.push({
+            //                 value: keyValue[0],
+            //                 label: keyValue[0],
+            //                 children: keyValue[1].map((value)=>{return {
+            //                     value,
+            //                     label: value,
+            //                 }})
+            //             })
+            //         })
+            // },
             selectNode(){
                 this.selectednode = this.cascaderNode[0] + ":" + this.cascaderNode[1];
                 console.log(this.selectednode)

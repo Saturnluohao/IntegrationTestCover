@@ -1,3 +1,7 @@
+<!-- No use -->
+<!-- No use -->
+<!-- No use -->
+
 <template>
     <div v-cloak class="hello">
         <h1>{{ msg }}</h1>
