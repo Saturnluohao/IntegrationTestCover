@@ -96,9 +96,9 @@
                         <el-container class="formbody">
                             <el-form ref="adjustForm" :model="adjustForm" label-width="80px">
                                 <el-form-item label="类选择">
-                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类" @change="getClass($event)">
+                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类">
                                         <el-option
-                                                v-for="item in adjustForm.allClasses"
+                                                v-for="item in allClasses"
                                                 :key="item"
                                                 :label="item"
                                                 :value="item">
@@ -108,10 +108,10 @@
                                 <el-form-item label="方法选择">
                                     <el-select filterable  v-model="adjustForm.selectedMethod" placeholder="请选择方法">
                                         <el-option
-                                                v-for="item in adjustForm.allMethods"
+                                                v-for="item in allMethods"
                                                 :key="item"
-                                                :label="item"
-                                                :value="item">
+                                                :label="item.substr(0,item.length-1)"
+                                                :value="item.substr(0,item.length-1)">
                                         </el-option>
                                     </el-select>
                                 </el-form-item>
@@ -291,8 +291,8 @@
                         <el-col :span="18" style="padding:0;text-align:left">
                             <el-select v-model="regression.chosedInfo" placeholder="做过的回归测试">
                                 <el-option
-                                    v-for="item in history.regressionInfos"
-                                    :key="item.name"
+                                    v-for="(item,index) in history.regressionInfos"
+                                    :key="index"
                                     :label="item.name"
                                     :value="item.name">
                                 </el-option>
@@ -382,8 +382,6 @@
                 adjustForm: {
                     selectedClass: '',
                     selectedMethod: '',
-                    allClasses: [],
-                    allMethods: [],
                 },
                 selectTestForm: {
                     selectedTestProject: '',
@@ -470,6 +468,19 @@
                         ans = ans.concat(this.oldvsnew.filter(testcase => testcase.state === filterMap[fil]));
                     })
                 return ans;
+            },
+            // 辅助定位 中的 所有 类 列表
+            allClasses(){
+                return Object.keys(this.classMethodMap);
+            },
+            // 辅助定位 中的 所有 方法 列表
+            allMethods(){
+                // 手动 将 元素 添加 一个 空白字符，是为了 防止 java 的 toString 和 js 的 toString 重名！！！
+                return (this.classMethodMap[this.adjustForm.selectedClass]||[]).map(element=>{
+                    return element+" ";
+                }).filter((element, index, array)=>{
+                    return index===array.indexOf(element)
+                });
             }
         },
         methods: {
@@ -510,7 +521,7 @@
                     getRelationByFileName(this.form.selectedjar, this.form.packages, this.form.packagesCall).then(response => {
                         _this.relation.nodes = response.nodes
                         _this.relation.links = response.links
-                        _this.adjustForm.allClasses = response.classes
+                        // _this.adjustForm.allClasses = response.classes
                         _this.classMethodMap = response.classMethodMap
                         try {
                             _this.showd3()
@@ -540,10 +551,6 @@
 // -- card 调用关系图的生成
 
 // --- card 定位方法
-            getClass(prov) {
-                this.adjustForm.allMethods = this.classMethodMap[prov]
-                this.adjustForm.selectedMethod = '';
-            },
             goToNode() {
                 var node = this.findNodeByName(this.adjustForm.selectedClass + ":" + this.adjustForm.selectedMethod)
                 var trans = this.tempTrans
@@ -1293,7 +1300,7 @@
                         document.getElementById("shrink-icon").classList.add("el-icon-arrow-right");
                         document.getElementById("leftSide").style.transform = "translate(-100%, 0)";
                         document.getElementById("leftSide").style.overflow = "visible";
-                    }, 500);
+                    }, 300);
                 }
                 else{
                     setTimeout(() => {
@@ -1301,7 +1308,7 @@
                         this.activeNames = this.actived;
                         document.getElementById("shrink-icon").classList.remove("el-icon-arrow-right");
                         document.getElementById("shrink-icon").classList.add("el-icon-arrow-left");
-                    }, 500);
+                    }, 300);
                     document.getElementById("leftSide").style.transform = "";
                 }
                 this.toggle = !this.toggle;
@@ -1309,12 +1316,10 @@
 // -- 整体
         },
         created () {
-            this.$nextTick(() => {
-                var historyForm = JSON.parse(localStorage.getItem('history'))
-                if(historyForm){
-                    this.history = historyForm
-                }
-            })
+            var historyForm = JSON.parse(localStorage.getItem('history'))
+            if(historyForm){
+                this.history = historyForm
+            }
         }
     }
 
