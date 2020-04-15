@@ -38,6 +38,13 @@
                             <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
                         </el-upload>
                     </el-card>
+                    <el-card :body-style="{ padding: '0px' }" class="card">
+                        <el-upload class="upload" action="/apiurl/uploadDep" accept="application/jar" ref="uploadDep" :file-list="depList" :auto-upload="false">
+                            <el-button slot="trigger" type="primary">选取文件</el-button>
+                            <el-button style="margin-left: 10px;" type="success" @click="submitDep">上传到服务器</el-button>
+                            <div slot="tip" class="el-upload__tip">上传相关的依赖文件</div>
+                        </el-upload>
+                    </el-card>
                 </el-collapse-item>
                 <el-collapse-item class="titlestyle" name="2">
                     <template slot="title">
@@ -96,10 +103,10 @@
                         <el-container class="formbody">
                             <el-form ref="adjustForm" :model="adjustForm" label-width="80px">
                                 <el-form-item label="类选择">
-                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类">
+                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类" @change="adjustForm.selectedMethod=''">
                                         <el-option
-                                                v-for="item in allClasses"
-                                                :key="item"
+                                                v-for="(item, index) in allClasses"
+                                                :key="index"
                                                 :label="item"
                                                 :value="item">
                                         </el-option>
@@ -108,10 +115,10 @@
                                 <el-form-item label="方法选择">
                                     <el-select filterable  v-model="adjustForm.selectedMethod" placeholder="请选择方法">
                                         <el-option
-                                                v-for="item in allMethods"
-                                                :key="item"
-                                                :label="item.substr(0,item.length-1)"
-                                                :value="item.substr(0,item.length-1)">
+                                                v-for="(item,index) in allMethods"
+                                                :key="index"
+                                                :label="item"
+                                                :value="item">
                                         </el-option>
                                     </el-select>
                                 </el-form-item>
@@ -374,6 +381,7 @@
                 relation: {},
                 cname: '',
                 fileList:[],
+                depList:[],
                 form: {
                     selectedjar: '',
                     packages:'',
@@ -475,10 +483,7 @@
             },
             // 辅助定位 中的 所有 方法 列表
             allMethods(){
-                // 手动 将 元素 添加 一个 空白字符，是为了 防止 java 的 toString 和 js 的 toString 重名！！！
-                return (this.classMethodMap[this.adjustForm.selectedClass]||[]).map(element=>{
-                    return element+" ";
-                }).filter((element, index, array)=>{
+                return (this.classMethodMap[this.adjustForm.selectedClass]||[]).filter((element, index, array)=>{
                     return index===array.indexOf(element)
                 });
             }
@@ -496,6 +501,9 @@
                 }
                 return isJAR
             },
+            submitDep(){
+                this.$refs.uploadDep.submit();
+            },
 // -- card 上传项目
 
 // --- card 调用关系图的生成
@@ -509,11 +517,17 @@
                 }
             },
             packagesHistory(queryString, cb) {
-                cb(this.history.packages);
+                let results = queryString ? this.history.packages.filter(ele=>{
+                        return ele.value.toLowerCase().indexOf(queryString.toLowerCase())!=-1;
+                    }) : this.history.packages;
+                cb(results);
             },
             packagesCallHistory(queryString, cb) {
                 // cb([{ "value": "asdasd"}]);
-                cb(this.history.packagesCall);
+                let results = queryString ? this.history.packagesCall.filter(ele=>{
+                        return ele.value.toLowerCase().indexOf(queryString.toLowerCase())!=-1;
+                    }) : this.history.packagesCall;
+                cb(results);
             },
             generateGraph(){
                 let _this = this
