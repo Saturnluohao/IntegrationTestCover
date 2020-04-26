@@ -29,55 +29,55 @@ public class JarFileInput {
         }
         return false;
     }
-    public static void  execCommand(ArrayList<String> l,String path){
-        BufferedReader br = null;
-        BufferedReader br2 = null;
-        StringBuilder sb = new StringBuilder();
-        StringBuilder sb2 = new StringBuilder();
-        File dir=new File(path);
-        for(String j:l){
-            System.out.println(j);
-            try {
-                Process p = Runtime.getRuntime().exec(j,null,dir);
-                br = new BufferedReader(new InputStreamReader(p.getInputStream(),"GBK"));
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line + "\n");
-                }
-                br2 = new BufferedReader(new InputStreamReader(p.getErrorStream(),"GBK"));
-                String line2 = null;
-                while ((line2 = br2.readLine()) != null) {
-                    sb2.append(line2 + "\n");
-                }
-               int i= p.waitFor();
-                System.out.println(i);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            finally
-            {
-                if (br != null)
-                {
-                    try {
-                        br.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        System.out.println(sb.toString());
-        System.out.println(sb2.toString());
-
-    }
+//    public static void  execCommand(ArrayList<String> l,String path){
+//        BufferedReader br = null;
+//        BufferedReader br2 = null;
+//        StringBuilder sb = new StringBuilder();
+//        StringBuilder sb2 = new StringBuilder();
+//        File dir=new File(path);
+//        for(String j:l){
+//            System.out.println(j);
+//            try {
+//                Process p = Runtime.getRuntime().exec(j,null,dir);
+//                br = new BufferedReader(new InputStreamReader(p.getInputStream(),"GBK"));
+//                String line = null;
+//                while ((line = br.readLine()) != null) {
+//                    sb.append(line + "\n");
+//                }
+//                br2 = new BufferedReader(new InputStreamReader(p.getErrorStream(),"GBK"));
+//                String line2 = null;
+//                while ((line2 = br2.readLine()) != null) {
+//                    sb2.append(line2 + "\n");
+//                }
+//               int i= p.waitFor();
+//                System.out.println(i);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            finally
+//            {
+//                if (br != null)
+//                {
+//                    try {
+//                        br.close();
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }
+//
+//        System.out.println(sb.toString());
+//        System.out.println(sb2.toString());
+//
+//    }
     public static void jarFileInput(String path,String filename) throws IOException {
 
 
         ArrayList<String> alist=new ArrayList<String>();
         try {
             //获取jar包内class路径
-            File f = new File(path+"\\"+filename);
+            File f = new File(path+ File.separator +filename);
 
             if (!f.exists()) {
                 System.err.println("Jar file " + filename + " does not exist");
@@ -100,7 +100,7 @@ public class JarFileInput {
                             int index1 = name.indexOf('/');
                             if (index != -1) {
                                 String md = name.substring(0, index);
-                                mkDirectory(path + "\\" + md);
+                                mkDirectory(path + File.separator + md);
                             }
                             String sub = name.substring(index + 1);
                             if (index1 != -1) {
