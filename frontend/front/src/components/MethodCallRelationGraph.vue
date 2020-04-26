@@ -96,9 +96,9 @@
                         <el-container class="formbody">
                             <el-form ref="adjustForm" :model="adjustForm" label-width="80px">
                                 <el-form-item label="类选择">
-                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类" @change="getClass($event)">
+                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类">
                                         <el-option
-                                                v-for="item in adjustForm.allClasses"
+                                                v-for="item in allClasses"
                                                 :key="item"
                                                 :label="item"
                                                 :value="item">
@@ -108,10 +108,10 @@
                                 <el-form-item label="方法选择">
                                     <el-select filterable  v-model="adjustForm.selectedMethod" placeholder="请选择方法">
                                         <el-option
-                                                v-for="item in adjustForm.allMethods"
+                                                v-for="item in allMethods"
                                                 :key="item"
-                                                :label="item"
-                                                :value="item">
+                                                :label="item.substr(0,item.length-1)"
+                                                :value="item.substr(0,item.length-1)">
                                         </el-option>
                                     </el-select>
                                 </el-form-item>
@@ -264,6 +264,7 @@
                                 </el-select>
                             </el-col>
                         </el-row>
+                        <!-- 考虑 添加 自动 补全 -->
                         <el-input
                             type="textarea"
                             autosize
@@ -290,8 +291,8 @@
                         <el-col :span="18" style="padding:0;text-align:left">
                             <el-select v-model="regression.chosedInfo" placeholder="做过的回归测试">
                                 <el-option
-                                    v-for="item in history.regressionInfos"
-                                    :key="item.name"
+                                    v-for="(item,index) in history.regressionInfos"
+                                    :key="index"
                                     :label="item.name"
                                     :value="item.name">
                                 </el-option>
@@ -308,7 +309,7 @@
                                     分析结果
                                 </el-col>
                                 <el-col :span="19">
-                                    <el-checkbox-group v-model="filterList" @change="filterChange">
+                                    <el-checkbox-group v-model="filterList">
                                         <el-checkbox label="remain"></el-checkbox>
                                         <el-checkbox label="affected"></el-checkbox>
                                     </el-checkbox-group>
@@ -381,8 +382,6 @@
                 adjustForm: {
                     selectedClass: '',
                     selectedMethod: '',
-                    allClasses: [],
-                    allMethods: [],
                 },
                 selectTestForm: {
                     selectedTestProject: '',
@@ -426,11 +425,10 @@
                     },
                     status:'选择新版本Jar包', // ui
                     disable:false,           // ui
-                    oldcases:[],             // 所有的测试用例
+                    oldcases:{},             // 所有的测试用例
                     chosedInfo:"",
                 },
                 oldvsnew:[],          // 用于新旧版本项目测试用例的对比
-                showoldvsnew:[],      // 存在筛选，所以要一个专门用于展示的
                 filterList:["remain", "affected"],    // 过滤回归测试结果测试用例
                 events:[],            // 脚本录制,
                 showReplay:false,     // 回放
@@ -441,7 +439,8 @@
             }
         },
         computed:{
-            cascaderClassMethod(){  // 添加节点板块的级联选择，已有节点
+            // 添加节点板块的级联选择，已有节点
+            cascaderClassMethod(){
                 let ans=[];
                 Object.entries(this.classMethodMap).forEach(keyValue=>{
                         ans.push({
@@ -454,6 +453,34 @@
                         })
                     });
                     return ans;
+            },
+            // 过滤 回归测试用例 的展示结果
+            showoldvsnew(){
+                let filterMap = {
+                    "remain": 0,
+                    "affected": 1
+                }
+                let ans = [] // refresh list to show
+                if(this.filterList.length === 2)
+                    ans = this.oldvsnew;
+                else
+                    this.filterList.forEach(fil =>{
+                        ans = ans.concat(this.oldvsnew.filter(testcase => testcase.state === filterMap[fil]));
+                    })
+                return ans;
+            },
+            // 辅助定位 中的 所有 类 列表
+            allClasses(){
+                return Object.keys(this.classMethodMap);
+            },
+            // 辅助定位 中的 所有 方法 列表
+            allMethods(){
+                // 手动 将 元素 添加 一个 空白字符，是为了 防止 java 的 toString 和 js 的 toString 重名！！！
+                return (this.classMethodMap[this.adjustForm.selectedClass]||[]).map(element=>{
+                    return element+" ";
+                }).filter((element, index, array)=>{
+                    return index===array.indexOf(element)
+                });
             }
         },
         methods: {
@@ -472,9 +499,10 @@
 // -- card 上传项目
 
 // --- card 调用关系图的生成
-            showfilelist(open){
+            showfilelist(open){     // 用于 选择 项目时，visible-change 事件 显示 下拉框 时 触发
                 if(open) {
                     let _this = this
+                    // 从 服务端 拉取 项目 列表
                     getUploadedFileList().then(response => {
                         _this.uploadedFiles = response.result
                     })
@@ -493,7 +521,7 @@
                     getRelationByFileName(this.form.selectedjar, this.form.packages, this.form.packagesCall).then(response => {
                         _this.relation.nodes = response.nodes
                         _this.relation.links = response.links
-                        _this.adjustForm.allClasses = response.classes
+                        // _this.adjustForm.allClasses = response.classes
                         _this.classMethodMap = response.classMethodMap
                         try {
                             _this.showd3()
@@ -523,10 +551,6 @@
 // -- card 调用关系图的生成
 
 // --- card 定位方法
-            getClass(prov) {
-                this.adjustForm.allMethods = this.classMethodMap[prov]
-                this.adjustForm.selectedMethod = '';
-            },
             goToNode() {
                 var node = this.findNodeByName(this.adjustForm.selectedClass + ":" + this.adjustForm.selectedMethod)
                 var trans = this.tempTrans
@@ -577,20 +601,13 @@
                 if(this.testCaseMap[prjName])
                     this.selectTestForm.allTestClasses = Object.keys(this.testCaseMap[prjName]);
                 else{
-                    if (time > 3) {
-                        this.$message.error('不存在项目"' + prjName + '"的测试用例，请上传该项目的测试用例，目前有以下项目的测试用例 [' + Object.keys(this.testCaseMap).toString().slice(0,30) + ']');
-                        this.selectTestForm.allTestClasses = [];
-                        this.selectTestForm.allTestCases = [];
-                    }
-                    else
-                        getTestCaseList().then(response=>{
-                            this.testCaseMap = response.result;
-                            console.log(this.testCaseMap)
-                            this.showTestClass(prjName,time+1);
-                        })
+                    this.$message.error('不存在项目"' + prjName + '"的测试用例，请上传该项目的测试用例，目前有以下项目的测试用例 [' + Object.keys(this.testCaseMap).toString().slice(0,30) + ']');
+                    this.selectTestForm.allTestClasses = [];
+                    this.selectTestForm.allTestCases = [];
                 }
             },
             getTestClass(prov) {
+                console.log(prov)
                 this.selectTestForm.selectedTestCase = '';
                 this.selectTestForm.allTestCases =  this.testCaseMap[this.selectTestForm.selectedTestProject.split('.')[0]][prov]
             },
@@ -598,14 +615,9 @@
                 if(open) {
                     const [{ result: uploadedFiles }, { result: testCaseMap }] 
                         = await Promise.all([getUploadedFileList(), getTestCaseList()])
-                    //response is {"result":{"demo":{"TestMethod.java":["allMehtods"],"allTestFiles":[],"Test2.java":["allMehtods"]}}}
-                    this.$nextTick(() => {
+                        //response is {"result":{"demo":{"TestMethod.java":["allMehtods"],"allTestFiles":[],"Test2.java":["allMehtods"]}}}
                         this.uploadedFiles = uploadedFiles;
                         this.testCaseMap = testCaseMap;
-                        if (this.selectTestForm.selectedTestProject) {
-                            this.getTestProject(this.selectTestForm.selectedTestProject)
-                        }
-                    })
                 }
             },
             startRunTestCase(file) {
@@ -922,13 +934,13 @@
 
 // --- card 回归测试
             // 选择要进行 回归测试 的项目
-            getRegressionProj(prov) {
+            async getRegressionProj(prov) {
                 var prjName = prov.split('.')[0];
                 // 回归测试时获取旧版本的所有测试用例
                 try {
                     this.regression.oldcases[prov] = Object.keys(this.testCaseMap[prjName]) 
                 } catch (error) {
-                    getTestCaseList().then(response=>{
+                    return getTestCaseList().then(response=>{
                         this.testCaseMap = response.result;
                         this.regression.oldcases[prov] = Object.keys(this.testCaseMap[prjName])
                     })
@@ -971,33 +983,20 @@
             analyseHistory(){
                 // 获取已上传的包的分析结果
                 let chosedInfo = this.history.regressionInfos.filter(info=>{return info.name === this.regression.chosedInfo})[0]
-                this.getRegressionProj(chosedInfo.oldJarName)
-                this.analyseJars(chosedInfo);
+                this.getRegressionProj(chosedInfo.oldJarName).then(result=>{
+                    this.analyseJars(chosedInfo);
+                })
             },
-            // 筛选展示的结果
-            filterChange(filters){
-                let filterMap = {
-                    "remain": 0,
-                    "affected": 1
-                }
-                this.showoldvsnew = [] // refresh list to show
-                if(filters.length === 2)
-                    this.showoldvsnew = this.oldvsnew;
-                else
-                    filters.forEach(fil =>{
-                        this.showoldvsnew = this.showoldvsnew.concat(this.oldvsnew.filter(testcase => testcase.state === filterMap[fil]));
-                    })
-            },
+            // 回归 测试 分析 函数
+            // 应用场景：1. 点击 “上传” 按钮 后 触发
+            //          2. 分析历史，点击 “分析” 按钮 后 触发
             analyseJars(para,time = 0){
                 // 检查 oldJarName 这个项目的所有用例是否获取
-                if (this.regression.oldcases[para.oldJarName]) {
                     postRegression(para).then(response=> {
                         let newcases = response;                // "oldcases" is all testcases
                         this.filterList = ["remain", "affected"]         // set filter to all
                         this.oldvsnew = [];                              // refresh result
-
                         this.regression.oldcases[para.oldJarName].forEach(testcase => {
-
                             if(newcases.includes(testcase)){
                                 // 有影响的
                                 this.oldvsnew.push({
@@ -1012,18 +1011,8 @@
                                 })
                             }
                         })
-                        this.showoldvsnew = this.oldvsnew;
+                        // this.showoldvsnew = this.oldvsnew;
                     })
-                }
-                else{
-                    if (time < 3) {
-                        // 重试三次，确保 testcasemap 一样
-                        let _this = this;
-                        setTimeout(()=>{
-                            _this.analyseJars(para,time + 1);
-                        },500)
-                    }
-                }
             },
 // -- card 回归测试
 
@@ -1311,7 +1300,7 @@
                         document.getElementById("shrink-icon").classList.add("el-icon-arrow-right");
                         document.getElementById("leftSide").style.transform = "translate(-100%, 0)";
                         document.getElementById("leftSide").style.overflow = "visible";
-                    }, 500);
+                    }, 300);
                 }
                 else{
                     setTimeout(() => {
@@ -1319,7 +1308,7 @@
                         this.activeNames = this.actived;
                         document.getElementById("shrink-icon").classList.remove("el-icon-arrow-right");
                         document.getElementById("shrink-icon").classList.add("el-icon-arrow-left");
-                    }, 500);
+                    }, 300);
                     document.getElementById("leftSide").style.transform = "";
                 }
                 this.toggle = !this.toggle;
@@ -1327,12 +1316,10 @@
 // -- 整体
         },
         created () {
-            this.$nextTick(() => {
-                var historyForm = JSON.parse(localStorage.getItem('history'))
-                if(historyForm){
-                    this.history = historyForm
-                }
-            })
+            var historyForm = JSON.parse(localStorage.getItem('history'))
+            if(historyForm){
+                this.history = historyForm
+            }
         }
     }
 
