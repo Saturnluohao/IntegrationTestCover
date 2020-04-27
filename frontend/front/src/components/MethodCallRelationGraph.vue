@@ -31,19 +31,43 @@
 
             <el-collapse v-model="activeNames">
                 <el-collapse-item class="titlestyle" title="上传项目" name="1">
-                    <el-card :body-style="{ padding: '0px' }" class="card">
-                        <el-upload class="upload" action="/apiurl/uploadJar" accept="application/jar" :before-upload="onBeforeUpload" ref="upload" :file-list="fileList" :auto-upload="false">
-                            <el-button slot="trigger" type="primary">选取文件</el-button>
-                            <el-button style="margin-left: 10px;" type="success" @click="submitUpload">上传到服务器</el-button>
-                            <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
+                    <el-card :body-style="{ padding: '10px', 'text-align': 'center'  }" class="card">
+                        <h3>上传一个新的测试项目</h3>
+                        <el-upload class="upload" action="/apiurl/uploadJar" accept=".jar" 
+                        ref="upload" 
+                        :on-change="jarChange"
+                        :on-remove="jarRemove"
+                        :limit="1"
+                        :on-exceed="handleExceed"
+                        :auto-upload="false">
+                            <el-button slot="trigger" type="primary" icon="el-icon-upload" :disabled="!!jar" round></el-button>
+                            <div slot="tip" class="el-upload__tip inline-tip">只能上传jar文件</div>
                         </el-upload>
-                    </el-card>
-                    <el-card :body-style="{ padding: '0px' }" class="card">
-                        <el-upload class="upload" action="/apiurl/uploadDep" accept="application/jar" ref="uploadDep" :file-list="depList" :auto-upload="false">
-                            <el-button slot="trigger" type="primary">选取文件</el-button>
-                            <el-button style="margin-left: 10px;" type="success" @click="submitDep">上传到服务器</el-button>
-                            <div slot="tip" class="el-upload__tip">上传相关的依赖文件</div>
-                        </el-upload>
+                        <el-card class="card" :body-style="{ 'padding-top': '5px'}" v-show="!!jar">
+                        <h4>相关信息</h4>
+                        <el-container class="formbody">
+                        <el-form ref="jarInfo" :model="jarInfo" label-width="80px">
+                            <el-form-item label="项目作者">
+                                <el-input v-model="jarInfo.author" placeholder="author">
+                                </el-input>
+                            </el-form-item>
+                            <el-form-item label="项目版本">
+                                <el-input v-model="jarInfo.version" placeholder="version">
+                                </el-input>
+                            </el-form-item>
+                            <el-form-item label="项目描述">
+                                <el-input v-model="jarInfo.description" placeholder="description">
+                                </el-input>
+                            </el-form-item>
+                        </el-form>
+                        </el-container>
+                        <el-button type="success" @click="newProject" round>上传到服务器</el-button>
+                        <el-divider content-position="left">可选</el-divider>
+                            <el-upload class="upload" action="/" accept="application/jar" ref="uploadDep" :auto-upload="false">
+                                <el-button slot="trigger" icon="el-icon-upload2" circle></el-button>
+                                <div slot="tip" class="el-upload__tip inline-tip">上传相关的依赖文件</div>
+                            </el-upload>
+                        </el-card>
                     </el-card>
                 </el-collapse-item>
                 <el-collapse-item class="titlestyle" name="2">
@@ -288,6 +312,7 @@
                             :on-remove="fileListChange"
                             :on-success="uploadSucc"
                             :limit="1"
+                            :disabled="regression.disable"
                             :auto-upload="false">
                             <el-button slot="trigger" size="small" type="primary" :disabled="regression.disable">{{regression.status}}</el-button>
                             <el-button style="margin-left: 10px;" size="small" type="success" @click="UploadJars"  :disabled="!regression.info.newJarName || !regression.info.oldJarName">上传</el-button>
@@ -358,6 +383,7 @@
         getTestRunningStatus, // 获取指定任务的执行进度，需要一个参数 (task_id_Key）
         getInvokingResults,   // 获取测试用例执行结果，需要一个参数 (task_id_Key）
         postRegression,       // 回归测试上传新旧包，传的参数为 regression.info
+        uploadNewProject
     } from '@/api/methodcallrelationgraph.js'
     import * as d3 from 'd3'
     import { setInterval } from 'timers';
@@ -380,8 +406,14 @@
                 },
                 relation: {},
                 cname: '',
-                fileList:[],
+                jar:null,
                 depList:[],
+                fileList:[],
+                jarInfo:{
+                    author:'',
+                    version:'',
+                    description:'',
+                },
                 form: {
                     selectedjar: '',
                     packages:'',
@@ -490,19 +522,35 @@
         },
         methods: {
 // --- card 上传项目
-            submitUpload() {
-                this.$refs.upload.submit();
+            jarChange(file, fileList){
+                this.jar=file;
             },
-            onBeforeUpload(file) {
-                const isJAR = file.name.endsWith('.jar')
-                if (!isJAR) {
-                    this.$message.error('只能上传Jar文件!');
-                    return false;
+            jarRemove(file, fileList){
+                this.jar=null;
+            },
+            handleExceed(){
+                this.$message.error('一次只能上传一个文件');
+            },
+            newProject(){
+                if(!this.jarInfo.author){
+                    this.$message.error('请填写作者信息');
+                    return;
                 }
-                return isJAR
-            },
-            submitDep(){
-                this.$refs.uploadDep.submit();
+                if(!this.jarInfo.version){
+                    this.$message.error('请填写版本信息');
+                    return;
+                }
+                let jarFile=this.jar.raw;
+                let depList=this.$refs.uploadDep.$refs['upload-inner'].fileList.map(element=>{
+                    return element.raw;
+                })
+                let formData=new FormData();
+                formData.append('jar', jarFile);
+                formData.append('dep', depList);
+                uploadNewProject({
+                    info:this.jarInfo,
+                    formData
+                })
             },
 // -- card 上传项目
 
@@ -1352,6 +1400,18 @@
 </script>
 
 <style lang="less">
+    h3{
+        font-size: 1.3rem;
+        margin: 10px;
+    }
+    h4{
+        font-size: 1.2rem;
+        margin: 10px;
+    }
+    .inline-tip{
+        display: inline-block;
+        margin-left: 15px;
+    }
     .el-cascader .el-input {
         width: 240px;
     }
