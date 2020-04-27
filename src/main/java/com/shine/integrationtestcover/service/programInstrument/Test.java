@@ -26,9 +26,11 @@ public class Test {
         return false;
     }
     public static void main(String[] args) throws IOException {
-        String l = "1000010";
-        System.out.println(l.substring(l.length()-2,l.length()));
-        Test test = new Test();
-        test.testmy();
+//        String l = "1000010";
+//        System.out.println(l.substring(l.length()-2,l.length()));
+//        Test test = new Test();
+//        test.testmy();
+        JarFileInput.packageNames = new String[]{"com.example.helloworld"};
+        JarFileInput.jarFileInput("/Users/zhangzijian/Desktop","helloWorld.jar");
     }
 }
