@@ -25,111 +25,81 @@
         </el-main>
 
         <div id="leftSide" class="left-side">
-            <h1>Method Call Relation Graph
+            <h2>Method Call Relation Graph
                 <i id="shrink-icon" class="funny el-icon-arrow-left" @click="shrink_open()"></i>
-            </h1>
+            </h2>
 
             <el-collapse v-model="activeNames">
-                <el-collapse-item class="titlestyle" name="1">
+                <el-collapse-item class="titlestyle" title="上传项目" name="1">
+                    <el-card :body-style="{ padding: '0px' }" class="card">
+                        <el-upload class="upload" action="/apiurl/uploadJar" accept="application/jar" :before-upload="onBeforeUpload" ref="upload" :file-list="fileList" :auto-upload="false">
+                            <el-button slot="trigger" type="primary">选取文件</el-button>
+                            <el-button style="margin-left: 10px;" type="success" @click="submitUpload">上传到服务器</el-button>
+                            <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
+                        </el-upload>
+                    </el-card>
+                </el-collapse-item>
+                <el-collapse-item class="titlestyle" name="2">
                     <template slot="title">
-                        <p class="itemname">测试一个项目</P>
+                        <p class="itemname">调用关系图生成</P>
                         <p class="require-info">（请先上传项目）</P>
                     </template>
-                    <el-card :body-style="{ padding: '10px', 'text-align': 'center'  }" class="card">
-                    <h3>选择一个测试项目</h3>
-                    <el-row style="margin:10px 0">
-                        <el-col :span="20">
-                            <el-select v-model="currentJar" placeholder="请选择要测试的Jar包" @visible-change="showfilelist"  @change="chooseProject($event)">
-                                <el-option
-                                        v-for="item in uploadedFiles"
-                                        :key="item"
-                                        :label="item"
-                                        :value="item">
-                                </el-option>
-                            </el-select>
-                        </el-col>
-                        <el-button type="primary" icon="el-icon-plus" title="新上传一个项目" circle @click="openNewProjectModal=true"></el-button>
-                    </el-row>
-
-                    <el-dialog title="上传一个新的测试项目" :visible.sync="openNewProjectModal" width="450px">
-                    <el-card :body-style="{ padding: '0px', 'text-align': 'center'  }" class="card">
-                        <h3>选择一个Jar包</h3>
-                        <el-upload class="upload" action="/apiurl/uploadJar" accept=".jar" 
-                        ref="upload" 
-                        :on-change="jarChange"
-                        :on-remove="jarRemove"
-                        :limit="1"
-                        :on-exceed="handleExceed"
-                        :auto-upload="false">
-                            <el-button slot="trigger" type="primary" icon="el-icon-upload" :disabled="!!jar" round></el-button>
-                            <div slot="tip" class="el-upload__tip inline-tip">只能上传jar文件</div>
-                        </el-upload>
-                        <el-card class="card" :body-style="{ 'padding-top': '5px'}" v-show="!!jar">
-                        <h4>相关信息</h4>
-                        <el-container class="formbody">
-                        <el-form ref="jarInfo" :model="jarInfo" label-width="80px">
-                            <el-form-item label="项目作者">
-                                <el-input v-model="jarInfo.author" placeholder="author">
-                                </el-input>
-                            </el-form-item>
-                            <el-form-item label="项目版本">
-                                <el-input v-model="jarInfo.version" placeholder="version">
-                                </el-input>
-                            </el-form-item>
-                            <el-form-item label="项目描述">
-                                <el-input v-model="jarInfo.description" placeholder="description">
-                                </el-input>
-                            </el-form-item>
-                        </el-form>
-                        </el-container>
-                        <el-button type="success" @click="newProject" round>上传到服务器</el-button>
-                        <el-divider content-position="left">可选</el-divider>
-                            <el-upload class="upload" action="/" accept="application/jar" ref="uploadDep" :auto-upload="false">
-                                <el-button slot="trigger" icon="el-icon-upload2" circle></el-button>
-                                <div slot="tip" class="el-upload__tip inline-tip">上传相关的依赖文件</div>
-                            </el-upload>
-                        </el-card>
-                    </el-card>
-                    </el-dialog>
-                    
-                    <el-collapse v-show="currentJar" v-model="activeTasks">
-                    <el-collapse-item class="titlestyle" title="调用关系图" name="relation">
-                    <template slot="title">
-                        <p class="itemname">生成调用关系图</P>
-                    </template>
                     <el-container class="formbody">
-                        <el-form ref="form" :model="form" label-width="90px">
+                        <div ref="form" :model="form" style="width:100%;text-align:left">
+                            <el-row :gutter="20" style="margin:10px 0">
+                                <el-col :span="6">Jar包选择</el-col>
+                                <el-col :span="18">
+                                    <el-select v-model="form.selectedjar" placeholder="请选择jar包" @visible-change="showfilelist">
+                                        <el-option
+                                                v-for="item in uploadedFiles"
+                                                :key="item"
+                                                :label="item"
+                                                :value="item">
+                                        </el-option>
+                                    </el-select>
+                                </el-col>
+                            </el-row>
+                            <div>
                                 <div style="color:darkgray;margin: 0 0 10px 10px;"> 如果打包时把lib一同打入，一定要输入包的范围 </div>
-                                    <el-form-item label="遍历范围">
+                                <el-row :gutter="20" style="margin:10px 0">
+                                    <el-col :span="6">遍历包范围</el-col>
+                                        <el-col :span="18">
                                         <el-autocomplete class="inline-input" v-model="form.packages" :fetch-suggestions="packagesHistory"
                                             placeholder="请输入遍历包范围"
                                         ></el-autocomplete>
-                                    </el-form-item>
-                                    <el-form-item label="生成范围">
+                                        </el-col>
+                                    </el-row>
+                            </div>
+                            <div>
+                                <div style="color:darkgray;margin:0 0 10px 10px;"> 如果打包时把lib一同打入，一定要输入包的范围 </div>
+                                <el-row :gutter="20" style="margin:10px 0">
+                                    <el-col :span="6">生成包范围</el-col>
+                                    <el-col :span="18">
                                         <el-autocomplete class="inline-input" v-model="form.packagesCall" :fetch-suggestions="packagesCallHistory"
                                             placeholder="请输入遍历包范围"
                                         ></el-autocomplete>
-                                    </el-form-item>
-                            <div style="text-align:center">
-                                <el-button type="primary" :disabled="currentJar.length == 0" size="small" @click="generateGraph()">立即创建</el-button>
+                                    </el-col>
+                                </el-row>
                             </div>
-                        </el-form>
+                            <div style="text-align:center">
+                                <el-button type="primary" :disabled="form.selectedjar.length == 0" size="small" @click="generateGraph()">立即创建</el-button>
+                            </div>
+                        </div>
                     </el-container>
                 </el-collapse-item>
-
-                    <el-collapse-item class="titlestyle" name="locateMethod" :class="JSON.stringify(relation)=='{}'?'disabled': ''">
+                <el-collapse-item class="titlestyle" name="3" :class="JSON.stringify(relation)=='{}'?'disabled': ''">
                     <template slot="title">
                         <p class="itemname">定位方法</P>
                         <p class="require-info">（请先生成调用关系图）</P>
                     </template>
-                        <el-card :body-style="{ padding: '0px' }" class="card">
+                    <el-card :body-style="{ padding: '0px' }" class="card">
                         <el-container class="formbody">
                             <el-form ref="adjustForm" :model="adjustForm" label-width="80px">
                                 <el-form-item label="类选择">
-                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类" @change="adjustForm.selectedMethod=''">
+                                    <el-select filterable  v-model="adjustForm.selectedClass" placeholder="请选择类" @change="getClass($event)">
                                         <el-option
-                                                v-for="(item, index) in allClasses"
-                                                :key="index"
+                                                v-for="item in adjustForm.allClasses"
+                                                :key="item"
                                                 :label="item"
                                                 :value="item">
                                         </el-option>
@@ -138,8 +108,8 @@
                                 <el-form-item label="方法选择">
                                     <el-select filterable  v-model="adjustForm.selectedMethod" placeholder="请选择方法">
                                         <el-option
-                                                v-for="(item,index) in allMethods"
-                                                :key="index"
+                                                v-for="item in adjustForm.allMethods"
+                                                :key="item"
                                                 :label="item"
                                                 :value="item">
                                         </el-option>
@@ -151,24 +121,44 @@
                             </el-form>
                         </el-container>
                     </el-card>
-                    </el-collapse-item>
-
-                <el-collapse-item class="titlestyle" name="runTest" :class="JSON.stringify(relation)=='{}'?'disabled': ''">
-                    <template slot="title">
-                        <p class="itemname">运行测试用例</P>
-                        <p class="require-info">（请先生成调用关系图）</P>
-                    </template>
-                    <el-card :body-style="{ padding: '0px', 'padding-top': '20px' }" class="card">
-                            <h3>{{this.selectTestForm.allTestClasses.length?"选择已有的测试用例":"请先上传一个测试用例!"}} &nbsp;&nbsp;<el-button size="mini" @click="openNewTestModal=true" circle title="新上传测试用例"><i class="el-icon-plus el-icon-right"></i></el-button></h3>    
-                            <el-container>
+                </el-collapse-item>
+                <el-collapse-item class="titlestyle" title="上传测试用例" name="4">
+                    <el-card :body-style="{ padding: '0px' }" class="card">
+                        <el-container class="formbody">
+                            <el-form ref="uploadTestData" :model="uploadTestData" label-width="80px">
+                                <el-form-item label="被测项目">
+                                    <el-select v-model="uploadTestData.selectedProject" placeholder="请选择项目">
+                                        <el-option
+                                            v-for="item in uploadedFiles"
+                                            :key="item"
+                                            :label="item"
+                                            :value="item">
+                                        </el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-upload class="upload" action="/apiurl/uploadTestCase" accept="application/jar" :before-upload="onBeforeUploadTestCase" ref="uploadTest" :file-list="fileList" :auto-upload="false" :data="uploadTestData">
+                                    <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+                                    <el-button style="margin-left: 10px;" size="small" type="success" @click="submitTestUpload">上传到服务器</el-button>
+                                    <div slot="tip" class="el-upload__tip">只能上传java文件或者zip文件</div>
+                                </el-upload>
+                            </el-form>
+                        </el-container>
+                    </el-card>
+                </el-collapse-item>
+                <el-collapse-item class="titlestyle" title="运行测试用例" name="5">
+                        <el-card :body-style="{ padding: '0px' }" class="card">
+                            <el-container class="formbody">
                                 <el-form ref="selectTestForm" :model="selectTestForm" label-width="80px">
-                                    <el-dialog title="上传新的测试用例" :visible.sync="openNewTestModal" width="350px">
-                                        <el-upload class="upload" action="/apiurl/uploadTestCase" accept=".zip,.java" :before-upload="onBeforeUploadTestCase" ref="uploadTest" :on-success="uploadTestCaseSuccess" :auto-upload="false" :data="{selectedProject:currentJar}">
-                                            <el-button slot="trigger" type="primary">选取文件</el-button>
-                                            <el-button style="margin-left: 10px;" type="success" @click="submitTestUpload">上传到服务器</el-button>
-                                            <div slot="tip" class="el-upload__tip">只能上传java文件或者zip文件</div>
-                                        </el-upload>
-                                    </el-dialog>
+                                    <el-form-item label="项目选择">
+                                        <el-select ref="selectTestProject" filterable  v-model="selectTestForm.selectedTestProject" placeholder="请选择项目" @change="getTestProject($event)" @visible-change="showTestProjectList">
+                                            <el-option
+                                                    v-for="item in uploadedFiles"
+                                                    :key="item"
+                                                    :label="item"
+                                                    :value="item">
+                                            </el-option>
+                                        </el-select>
+                                    </el-form-item>
                                     <el-form-item label="类选择">
                                         <el-select ref="selectTestClass" filterable  :disabled="Object.entries(testCaseMap).length == 0 || selectTestForm.allTestClasses.length == 0" v-model="selectTestForm.selectedTestClass" placeholder="请选择测试类" @change="getTestClass($event)">
                                             <el-option
@@ -198,14 +188,8 @@
                                 </el-form>
                             </el-container>
                         </el-card>
-
                 </el-collapse-item>
-
-                <el-collapse-item class="titlestyle" name="coverage" :class="JSON.stringify(relation)=='{}'?'disabled': ''">
-                    <template slot="title">
-                        <p class="itemname">未覆盖测试用例</P>
-                        <p class="require-info">（请先生成调用关系图）</P>
-                    </template>
+                <el-collapse-item class="titlestyle" title="未覆盖测试用例" name="6">
                         <el-card :body-style="{ padding: '0px' }" class="card">
                             <el-container class="formbody">
                                <el-form ref="form" :model="selectTestForm" label-width="80px">
@@ -232,8 +216,7 @@
                             </el-container>
                         </el-card>
                 </el-collapse-item>
-
-                    <el-collapse-item class="titlestyle" title="添加新节点" name="addNode">
+                <el-collapse-item class="titlestyle" title="添加节点" name="7">
                     <el-card :body-style="{ padding: '0px' }" class="card">
                         <el-container class="formbody">
                             <el-form ref="form" :model="selectTestForm" label-width="80px">
@@ -241,6 +224,7 @@
                                     <el-cascader
                                         v-model="cascaderNode"
                                         :options="cascaderClassMethod"
+                                        @visible-change="praseClassMethod"
                                         @change="selectNode">
                                     </el-cascader>
                                 </el-form-item>
@@ -261,11 +245,26 @@
                             </el-form>
                         </el-container>
                     </el-card>
-                    </el-collapse-item>
-
-                    <el-collapse-item class="titlestyle" title="回归测试" name="regression">
+                </el-collapse-item>
+                <el-collapse-item class="titlestyle" title="回归测试" name="8">
                     <el-card :body-style="{ padding: '0px 5px' }" class="card">
-                        <!-- 考虑 添加 自动 补全 -->
+                        <el-row :gutter="20" style="margin:10px 0">
+                            <el-col :span="6" style="padding:5px 0;">项目选择</el-col>
+                            <el-col :span="18" style="padding:0;">
+                                <el-select
+                                    v-model="regression.info.oldJarName" 
+                                    placeholder="请选择进行回归测试的项目" 
+                                    @visible-change="showfilelist" 
+                                    @change="getRegressionProj($event)">
+                                    <el-option
+                                        v-for="item in uploadedFiles"
+                                        :key="item"
+                                        :label="item"
+                                        :value="item">
+                                    </el-option>
+                                </el-select>
+                            </el-col>
+                        </el-row>
                         <el-input
                             type="textarea"
                             autosize
@@ -282,10 +281,9 @@
                             :on-remove="fileListChange"
                             :on-success="uploadSucc"
                             :limit="1"
-                            :disabled="regression.disable"
                             :auto-upload="false">
                             <el-button slot="trigger" size="small" type="primary" :disabled="regression.disable">{{regression.status}}</el-button>
-                            <el-button style="margin-left: 10px;" size="small" type="success" @click="UploadJars"  :disabled="!regression.info.newJarName || !currentJar">上传</el-button>
+                            <el-button style="margin-left: 10px;" size="small" type="success" @click="UploadJars"  :disabled="!regression.info.newJarName || !regression.info.oldJarName">上传</el-button>
                             <div slot="tip" class="el-upload__tip">请上传新版本的Jar包</div>
                         </el-upload>
                     </el-card>
@@ -293,8 +291,8 @@
                         <el-col :span="18" style="padding:0;text-align:left">
                             <el-select v-model="regression.chosedInfo" placeholder="做过的回归测试">
                                 <el-option
-                                    v-for="(item,index) in history.regressionInfos"
-                                    :key="index"
+                                    v-for="item in history.regressionInfos"
+                                    :key="item.name"
                                     :label="item.name"
                                     :value="item.name">
                                 </el-option>
@@ -311,7 +309,7 @@
                                     分析结果
                                 </el-col>
                                 <el-col :span="19">
-                                    <el-checkbox-group v-model="filterList">
+                                    <el-checkbox-group v-model="filterList" @change="filterChange">
                                         <el-checkbox label="remain"></el-checkbox>
                                         <el-checkbox label="affected"></el-checkbox>
                                     </el-checkbox-group>
@@ -324,12 +322,7 @@
                             </el-tooltip>
                         </div>
                     </div>
-                    </el-collapse-item>
-
-                    </el-collapse>
-                    </el-card>
                 </el-collapse-item>
-
                 <el-collapse-item class="titlestyle" title="脚本录制" name="9">
                     <!-- 选择框，选择要回放的测试用例 -->
                     <el-button size="small" type="primary" @click="watchReplay">查看回放</el-button>
@@ -358,14 +351,12 @@
         getTestRunningStatus, // 获取指定任务的执行进度，需要一个参数 (task_id_Key）
         getInvokingResults,   // 获取测试用例执行结果，需要一个参数 (task_id_Key）
         postRegression,       // 回归测试上传新旧包，传的参数为 regression.info
-        uploadNewProject
     } from '@/api/methodcallrelationgraph.js'
     import * as d3 from 'd3'
     import { setInterval } from 'timers';
     import { Promise } from 'q';
     import * as rrweb from "rrweb";
     import Player from '@/components/Player.vue';
-
     export default {
         components: {
             ElButton,
@@ -379,32 +370,25 @@
                 uploadTestData: {
                     selectedProject: ''
                 },
-                openNewProjectModal:false,
-                openNewTestModal:false,
                 relation: {},
                 cname: '',
-                jar:null,
-                depList:[],
                 fileList:[],
-                jarInfo:{
-                    author:'',
-                    version:'',
-                    description:'',
-                },
-                currentJar:'',
                 form: {
+                    selectedjar: '',
                     packages:'',
                     packagesCall:''
                 },
                 adjustForm: {
                     selectedClass: '',
                     selectedMethod: '',
+                    allClasses: [],
+                    allMethods: [],
                 },
                 selectTestForm: {
                     selectedTestProject: '',
                     selectedTestClass: '',
                     selectedTestCase: '',
-                    allTestClasses: '',
+                    allTestClasses: [],
                     allTestCases: [],
                     selectUncoverTest:[],
                 },
@@ -418,12 +402,11 @@
                 selectednode:'',
                 newnode:'',
                 selectednodetype:'',
-                classMethodMap:{},
+                classMethodMap:{"a": ["a","b"], "b": ["a","c"]},
                 testCaseMap:{},
                 g:{},
                 tempTrans: d3.zoomIdentity.translate(0, 0).scale(1),
                 activeNames: ['1'],  //加上这个不然控制台老报错
-                activeTasks: ['relation'],
                 runTestPercentange:0,
                 taskId:'',
                 taskType:'',      // "many" 和 "one" 
@@ -437,142 +420,70 @@
                 regression:{          // 回归测试用的新旧版本 Jar 包
                     jarFiles: [],     // 新 Jar 包列表
                     info:{
+                        oldJarName:'',
                         newJarName:'',
                         packageName:'',
                     },
                     status:'选择新版本Jar包', // ui
                     disable:false,           // ui
-                    oldcases:{},             // 所有的测试用例
+                    oldcases:[],             // 所有的测试用例
                     chosedInfo:"",
                 },
                 oldvsnew:[],          // 用于新旧版本项目测试用例的对比
+                showoldvsnew:[],      // 存在筛选，所以要一个专门用于展示的
                 filterList:["remain", "affected"],    // 过滤回归测试结果测试用例
                 events:[],            // 脚本录制,
                 showReplay:false,     // 回放
                 isRecording:false,    // 是否正在录制
                 isplay:true,
                 playandpause:'暂停',
+                cascaderClassMethod:[],  // 添加节点板块的级联选择，已有节点
                 cascaderNode:[],
-            }
-        },
-        computed:{
-            // 添加节点板块的级联选择，已有节点
-            cascaderClassMethod(){
-                let ans=[];
-                Object.entries(this.classMethodMap).forEach(keyValue=>{
-                        ans.push({
-                            value: keyValue[0],
-                            label: keyValue[0],
-                            children: keyValue[1].map((value)=>{return {
-                                value,
-                                label: value,
-                            }})
-                        })
-                    });
-                    return ans;
-            },
-            // 过滤 回归测试用例 的展示结果
-            showoldvsnew(){
-                let filterMap = {
-                    "remain": 0,
-                    "affected": 1
-                }
-                let ans = [] // refresh list to show
-                if(this.filterList.length === 2)
-                    ans = this.oldvsnew;
-                else
-                    this.filterList.forEach(fil =>{
-                        ans = ans.concat(this.oldvsnew.filter(testcase => testcase.state === filterMap[fil]));
-                    })
-                return ans;
-            },
-            // 辅助定位 中的 所有 类 列表
-            allClasses(){
-                return Object.keys(this.classMethodMap);
-            },
-            // 辅助定位 中的 所有 方法 列表
-            allMethods(){
-                return (this.classMethodMap[this.adjustForm.selectedClass]||[]).filter((element, index, array)=>{
-                    return index===array.indexOf(element)
-                });
             }
         },
         methods: {
 // --- card 上传项目
-            jarChange(file, fileList){
-                this.jar=file;
+            submitUpload() {
+                this.$refs.upload.submit();
             },
-            jarRemove(file, fileList){
-                this.jar=null;
-            },
-            handleExceed(){
-                this.$message.error('一次只能上传一个文件');
-            },
-            newProject(){
-                if(!this.jarInfo.author){
-                    this.$message.error('请填写作者信息');
-                    return;
+            onBeforeUpload(file) {
+                const isJAR = file.name.endsWith('.jar')
+                if (!isJAR) {
+                    this.$message.error('只能上传Jar文件!');
+                    return false;
                 }
-                if(!this.jarInfo.version){
-                    this.$message.error('请填写版本信息');
-                    return;
-                }
-                let jarFile=this.jar.raw;
-                let depList=this.$refs.uploadDep.$refs['upload-inner'].fileList.map(element=>{
-                    return element.raw;
-                })
-                let formData=new FormData();
-                formData.append('jar', jarFile);
-                formData.append('dep', depList);
-                uploadNewProject({
-                    info:this.jarInfo,
-                    formData
-                })
+                return isJAR
             },
 // -- card 上传项目
-
 // --- card 调用关系图的生成
-            showfilelist(open){     // 用于 选择 项目时，visible-change 事件 显示 下拉框 时 触发
+            showfilelist(open){
                 if(open) {
                     let _this = this
-                    // 从 服务端 拉取 项目 列表
                     getUploadedFileList().then(response => {
-                        _this.uploadedFiles = response.result;
-                        getTestCaseList().then(response=>{
-                            this.testCaseMap=response.result;
-                            this.getTestProject(this.currentJar);
-                            this.getRegressionProj(this.currentJar);
-                        })
+                        _this.uploadedFiles = response.result
                     })
                 }
             },
             packagesHistory(queryString, cb) {
-                let results = queryString ? this.history.packages.filter(ele=>{
-                        return ele.value.toLowerCase().indexOf(queryString.toLowerCase())!=-1;
-                    }) : this.history.packages;
-                cb(results);
+                cb(this.history.packages);
             },
             packagesCallHistory(queryString, cb) {
                 // cb([{ "value": "asdasd"}]);
-                let results = queryString ? this.history.packagesCall.filter(ele=>{
-                        return ele.value.toLowerCase().indexOf(queryString.toLowerCase())!=-1;
-                    }) : this.history.packagesCall;
-                cb(results);
+                cb(this.history.packagesCall);
             },
             generateGraph(){
                 let _this = this
                 this.$nextTick(() => {
-                    getRelationByFileName(this.currentJar, this.form.packages, this.form.packagesCall).then(response => {
+                    getRelationByFileName(this.form.selectedjar, this.form.packages, this.form.packagesCall).then(response => {
                         _this.relation.nodes = response.nodes
                         _this.relation.links = response.links
-                        // _this.adjustForm.allClasses = response.classes
+                        _this.adjustForm.allClasses = response.classes
                         _this.classMethodMap = response.classMethodMap
                         try {
                             _this.showd3()
-
                             // 选择默认将项目设为此项目
-                            // _this.uploadTestData.selectedProject = _this.currentJar;      // 上传测试用例部分
-                            // _this.currentJar = _this.currentJar;  // 运行测试用例部分
+                            _this.uploadTestData.selectedProject = _this.form.selectedjar;      // 上传测试用例部分
+                            _this.selectTestForm.selectedTestProject = _this.form.selectedjar;  // 运行测试用例部分
                         } catch (error) {
                             if (!_this.relation.nodes) {
                                 this.$message.error("生成调用图失败，可能的原因是：遍历程序包方法时出错");
@@ -593,12 +504,14 @@
                 })
             },
 // -- card 调用关系图的生成
-
 // --- card 定位方法
+            getClass(prov) {
+                this.adjustForm.allMethods = this.classMethodMap[prov]
+                this.adjustForm.selectedMethod = '';
+            },
             goToNode() {
                 var node = this.findNodeByName(this.adjustForm.selectedClass + ":" + this.adjustForm.selectedMethod)
                 var trans = this.tempTrans
-
                 trans.k = 1;
                 this.g.attr('transform',trans);
                 // 根据视野大小定位
@@ -611,10 +524,10 @@
                 this.g.attr('transform', trans)
             },
 // -- card 定位方法
-
 // --- card 上传测试用例
             submitTestUpload() {
                 this.$refs.uploadTest.submit();
+                this.selectTestForm.selectedTestProject = ''
                 this.selectTestForm.selectedTestClass = ''
                 this.selectTestForm.selectedTestCase = ''
                 this.testCaseMap = {}
@@ -629,50 +542,57 @@
                     return true
                 }
             },
-            uploadTestCaseSuccess(){
-                getTestCaseList().then(response=>{
-                    this.testCaseMap=response.result;
-                    this.getTestProject(this.currentJar)
-                    this.openNewTestModal=false;
-                })
-            },
 // -- card 上传测试用例
-
 // --- card 运行测试用例
-            chooseProject(prov) {
-                this.form.packages='';
-                this.form.packagesCall='';
-                this.activeTasks=["relation"];
-                this.getTestProject(prov);
-                this.getRegressionProj(prov);
-            },
-            getTestProject(prov){
+            getTestProject(prov) {
                 this.selectTestForm.selectedTestCase = '';
                 this.selectTestForm.selectedTestClass = '';
                 this.uncoverfullname=[];
                 var prjName = prov.split('.')[0];
                 // prov is "demo.jar" but testCaseMap is {"demo":{...}}
-                this.showTestClass(prjName)
+                this.showTestClass(prjName,1)
             },
-            showTestClass(prjName){
+            showTestClass(prjName,time){
                 if(this.testCaseMap[prjName])
                     this.selectTestForm.allTestClasses = Object.keys(this.testCaseMap[prjName]);
                 else{
-                    this.selectTestForm.allTestClasses = [];
-                    this.selectTestForm.allTestCases = [];
+                    if (time > 3) {
+                        this.$message.error('不存在项目"' + prjName + '"的测试用例，请上传该项目的测试用例，目前有以下项目的测试用例 [' + Object.keys(this.testCaseMap).toString().slice(0,30) + ']');
+                        this.selectTestForm.allTestClasses = [];
+                        this.selectTestForm.allTestCases = [];
+                    }
+                    else
+                        getTestCaseList().then(response=>{
+                            this.testCaseMap = response.result;
+                            console.log(this.testCaseMap)
+                            this.showTestClass(prjName,time+1);
+                        })
                 }
             },
             getTestClass(prov) {
-                console.log(prov)
                 this.selectTestForm.selectedTestCase = '';
-                this.selectTestForm.allTestCases =  this.testCaseMap[this.currentJar.split('.')[0]][prov]
+                this.selectTestForm.allTestCases =  this.testCaseMap[this.selectTestForm.selectedTestProject.split('.')[0]][prov]
+            },
+            async showTestProjectList(open) {
+                if(open) {
+                    const [{ result: uploadedFiles }, { result: testCaseMap }] 
+                        = await Promise.all([getUploadedFileList(), getTestCaseList()])
+                    //response is {"result":{"demo":{"TestMethod.java":["allMehtods"],"allTestFiles":[],"Test2.java":["allMehtods"]}}}
+                    this.$nextTick(() => {
+                        this.uploadedFiles = uploadedFiles;
+                        this.testCaseMap = testCaseMap;
+                        if (this.selectTestForm.selectedTestProject) {
+                            this.getTestProject(this.selectTestForm.selectedTestProject)
+                        }
+                    })
+                }
             },
             startRunTestCase(file) {
                 this.uncoverfullname=[];
                 if(this.TestResult!=null){
                     this.cancelShow(this.TestResult);
                 }
-                var projectname  = this.currentJar;
+                var projectname  = this.selectTestForm.selectedTestProject;
                 var testcasename = this.selectTestForm.selectedTestClass;
                 var method       = this.selectTestForm.selectedTestCase;
                 if(!projectname || !testcasename || (testcasename != 'allTestFiles' && !method)){
@@ -718,10 +638,10 @@
                         //this.usecasenum=this.testCaseMap[this.selectedTestProject].length;
                          var sum=0;
                          console.log(_this.testCaseMap)
-                         console.log(_this.currentJar.split('.')[0])
-                         for(let index in _this.testCaseMap[_this.currentJar.split('.')[0]])
+                         console.log(_this.selectTestForm.selectedTestProject.split('.')[0])
+                         for(let index in _this.testCaseMap[_this.selectTestForm.selectedTestProject.split('.')[0]])
                          {
-                                sum+=_this.testCaseMap[_this.currentJar.split('.')[0]][index].length;
+                                sum+=_this.testCaseMap[_this.selectTestForm.selectedTestProject.split('.')[0]][index].length;
                          }
                         console.log(_this.usecasenum)
                          _this.usecasenum  =sum;
@@ -730,7 +650,7 @@
                     {
                         if(_this.selectTestForm.selectedTestCase == "allMethods")
                         {
-                             _this.usecasenum = _this.testCaseMap[_this.currentJar.split('.')[0]][_this.selectTestForm.selectedTestClass].length;
+                             _this.usecasenum = _this.testCaseMap[_this.selectTestForm.selectedTestProject.split('.')[0]][_this.selectTestForm.selectedTestClass].length;
                         } else {
                             _this.usecasenum = 1;
                         }
@@ -820,12 +740,9 @@
                 // 根据视野大小定位
                 var width = document.getElementById('container').offsetWidth;
                 var height = document.getElementById('container').offsetHeight;
-
                 trans.x = (Math.round(width/2) - node.x) * trans.k
                 trans.y = (Math.round(height/2) - node.y) * trans.k
-
                 this.g.attr('transform', trans)
-
             },
             //改变用例测试经过的直线
             changeSingleLine(SourceName,TargetName){
@@ -852,7 +769,6 @@
                     this.cancelLine(result[0],result[2]);
                     this.cancelNode(result[0]);
                     this.cancelNode(result[2]);
-
                 }
             },
             //给节点加上边界效果
@@ -886,7 +802,6 @@
                 d3.select('#node' + node_id).attr('stroke-width',0).attr('stroke','').attr('filter','')
             },
 // -- card 运行测试用例
-
 // --- card 未覆盖测试用例
             //定位到未覆盖边
             gotoUncover(){
@@ -908,16 +823,13 @@
                         // 根据视野大小定位
                         var width = document.getElementById('container').offsetWidth;
                         var height = document.getElementById('container').offsetHeight;
-
                         trans.x = (Math.round(width/2) - node.x) * trans.k
                         trans.y = (Math.round(height/2) - node.y) * trans.k
-
                         this.g.attr('transform', trans)
                     }
                 }
             },
 // -- card 未覆盖测试用例
-
 // --- card 添加节点
             //创建新节点并把源节点移到中心
             createNewNode(){
@@ -953,27 +865,42 @@
                 // 根据视野大小定位
                 var width = document.getElementById('container').offsetWidth;
                 var height = document.getElementById('container').offsetHeight;
-
                 trans.x = (Math.round(width/2) - node.x) * trans.k
                 trans.y = (Math.round(height/2) - node.y) * trans.k
-
                 this.g.attr('transform', trans)
+            },
+            // 把 this.classMethodMap 解析成 cascader 格式的 ClassMethod 
+            praseClassMethod(){
+                if(!this.cascaderClassMethod.length)
+                    Object.entries(this.classMethodMap).forEach(keyValue=>{
+                        this.cascaderClassMethod.push({
+                            value: keyValue[0],
+                            label: keyValue[0],
+                            children: keyValue[1].map((value)=>{return {
+                                value,
+                                label: value,
+                            }})
+                        })
+                    })
             },
             selectNode(){
                 this.selectednode = this.cascaderNode[0] + ":" + this.cascaderNode[1];
                 console.log(this.selectednode)
             },
 // -- card 添加节点
-
 // --- card 回归测试
             // 选择要进行 回归测试 的项目
             getRegressionProj(prov) {
                 var prjName = prov.split('.')[0];
                 // 回归测试时获取旧版本的所有测试用例
-                if(this.testCaseMap[prjName])
+                try {
                     this.regression.oldcases[prov] = Object.keys(this.testCaseMap[prjName]) 
-                else
-                    this.regression.oldcases[prov]=[];
+                } catch (error) {
+                    getTestCaseList().then(response=>{
+                        this.testCaseMap = response.result;
+                        this.regression.oldcases[prov] = Object.keys(this.testCaseMap[prjName])
+                    })
+                }
             },
             fileListChange(file, fileList) {
                 if(fileList.length == 1){
@@ -991,25 +918,20 @@
                 this.showMsg("上传'" + file.name + "'成功");
                 // 保存历史记录
                 let option = {
-                    oldJarName: this.currentJar,
+                    oldJarName: this.regression.info.oldJarName,
                     newJarName: this.regression.info.newJarName,
                     packageName:this.regression.info.packageName,
-                    name:this.currentJar + " --> " + file.name
+                    name:this.regression.info.oldJarName + " --> " + file.name
                 }
-                this.history.regressionInfos
-                if(this.history.regressionInfos){
-                    this.history.regressionInfos.push(option)
-                    this.history.regressionInfos=this.history.regressionInfos.filter((element,index,array)=>{
-                        return index==array.findIndex(ele=>{
-                            return element.name===ele.name;
-                        })
-                    })
-                }
-                else
-                    this.history.regressionInfos = [option];
-                localStorage.setItem('history',JSON.stringify(this.history));
+                this.$nextTick(()=>{
+                    if(this.history.regressionInfos)
+                        this.history.regressionInfos.push(option)
+                    else
+                        this.history.regressionInfos = [option];
+                    localStorage.setItem('history',JSON.stringify(this.history));
+                })
                 // 自动获取分析结果
-                this.analyseJars(option);
+                this.analyseJars(this.regression.info);
             },
             UploadJars(){
                 this.$refs.uploadjar.submit();
@@ -1020,11 +942,23 @@
                 this.getRegressionProj(chosedInfo.oldJarName)
                 this.analyseJars(chosedInfo);
             },
-            // 回归 测试 分析 函数
-            // 应用场景：1. 点击 “上传” 按钮 后 触发
-            //          2. 分析历史，点击 “分析” 按钮 后 触发
-            analyseJars(para){
+            // 筛选展示的结果
+            filterChange(filters){
+                let filterMap = {
+                    "remain": 0,
+                    "affected": 1
+                }
+                this.showoldvsnew = [] // refresh list to show
+                if(filters.length === 2)
+                    this.showoldvsnew = this.oldvsnew;
+                else
+                    filters.forEach(fil =>{
+                        this.showoldvsnew = this.showoldvsnew.concat(this.oldvsnew.filter(testcase => testcase.state === filterMap[fil]));
+                    })
+            },
+            analyseJars(para,time = 0){
                 // 检查 oldJarName 这个项目的所有用例是否获取
+                if (this.regression.oldcases[para.oldJarName]) {
                     postRegression(para).then(response=> {
                         let newcases = response;                // "oldcases" is all testcases
                         this.filterList = ["remain", "affected"]         // set filter to all
@@ -1044,11 +978,20 @@
                                 })
                             }
                         })
-                        // this.showoldvsnew = this.oldvsnew;
+                        this.showoldvsnew = this.oldvsnew;
                     })
+                }
+                else{
+                    if (time < 3) {
+                        // 重试三次，确保 testcasemap 一样
+                        let _this = this;
+                        setTimeout(()=>{
+                            _this.analyseJars(para,time + 1);
+                        },500)
+                    }
+                }
             },
 // -- card 回归测试
-
 // --- card 脚本录制
             watchReplay(){
                 this.showReplay = true;
@@ -1063,18 +1006,15 @@
                 this.isplay = !this.isplay;
             },
 // -- card 脚本录制
-
 // --- 整体
             showd3 () {
                 //获取body高度和宽度
                 let height = document.body.clientHeight
                 let width = document.body.clientWidth
-
                 //移动端设备横竖屏重新加载页面
                 // function change () {
                     // window.location.reload()
                 // }
-
                 // window.addEventListener('onorientationchange' in window ? 'orientationchange' : 'resize', change, false)
                 //节点大小（圆圈大小）
                 const nodeSize = 35
@@ -1089,22 +1029,18 @@
                     .attr('xmlns', 'http://www.w3.org/2000/svg')
                     .attr('version', '2.0')
                     .attr('class', 'svg')//给svg设置了一个class样式，主要作用是长宽设置为100%
-
                 //设置力布局，使用d3 v4版本的力导向布局
                 var force = d3.forceSimulation()
                     .force('center', d3.forceCenter(width / 2 - 200, height / 2 -100))//设置力导向布局的中心点，创建一个力中心，设置为画布长宽的一半，所以拓扑图会在画布的中心点
                     .force('charce', d3.forceManyBody().strength(-300))//节点间的作用力
                     .force('collide', d3.forceCollide().radius(() => 60))//使用30的半径创建一个碰撞作用力
-
                 
                 // 移除上一个图（如果有的话）
                 if(svg.selectAll("g").size() > 0){
                     svg.selectAll("g").remove();
                 }
-
                 //svg下嵌套g标签，缩放都在g标签上进行
                 var g = svg.append('g')
-
                 this.g = g
                 var _this = this
                 //d3.zoom是设置缩放，pc端是滚轮进行缩放，在移动端可以通过两指进行缩放
@@ -1138,8 +1074,6 @@
                         .append('path')
                         .attr('d', 'M0,-5L10,0L0,5')//箭头的路径
                         //.attr('fill', '#ff7438')//箭头颜色
-
-
                 //设置连线
                 var edgesLine = g.selectAll('line')
                     .data(links)
@@ -1153,7 +1087,6 @@
                     })
                     .style('stroke-width', 2)//连接线粗细度
                     .attr('marker-end', 'url(#resolved)')//设置线的末尾为刚刚的箭头
-
                 //设置连接线中间关系文本
                 var edgesText = g.selectAll('.linetext')
                     .data(links)
@@ -1190,7 +1123,6 @@
                         }
                         d.fixed = true;
                     })
-
                 //设置节点
                 var node = g.selectAll('circle')
                     .data(nodes)
@@ -1276,12 +1208,10 @@
                             return subs[subs.length - 1];
                         })
                     });
-
                 //设置node和edge
                 force.nodes(nodes)
                     .force('link', d3.forceLink(links).distance(linkDistance).strength(0.1))
                     .restart()
-
                 //tick 表示当运动进行中每更新一帧时
                 force.on('tick', function () {
                     //更新连接线的位置
@@ -1294,13 +1224,11 @@
                         return (d.source.x + d.target.x) / 2
                     })
                     edgesText.attr('y', function (d) { return (d.source.y + d.target.y) / 2 })
-
                     //更新结点图片和文字
                     node.attr('cx', function (d) {
                         return d.x
                     })
                     node.attr('cy', function (d) { return d.y })
-
                     nodeText.attr('x', function (d) { return d.x })
                     nodeText.attr('y', function (d) { return d.y })
                     //动态更新sptan 的x的坐标
@@ -1333,7 +1261,7 @@
                         document.getElementById("shrink-icon").classList.add("el-icon-arrow-right");
                         document.getElementById("leftSide").style.transform = "translate(-100%, 0)";
                         document.getElementById("leftSide").style.overflow = "visible";
-                    }, 300);
+                    }, 500);
                 }
                 else{
                     setTimeout(() => {
@@ -1341,7 +1269,7 @@
                         this.activeNames = this.actived;
                         document.getElementById("shrink-icon").classList.remove("el-icon-arrow-right");
                         document.getElementById("shrink-icon").classList.add("el-icon-arrow-left");
-                    }, 300);
+                    }, 500);
                     document.getElementById("leftSide").style.transform = "";
                 }
                 this.toggle = !this.toggle;
@@ -1349,13 +1277,14 @@
 // -- 整体
         },
         created () {
-            var historyForm = JSON.parse(localStorage.getItem('history'))
-            if(historyForm){
-                this.history = historyForm
-            }
+            this.$nextTick(() => {
+                var historyForm = JSON.parse(localStorage.getItem('history'))
+                if(historyForm){
+                    this.history = historyForm
+                }
+            })
         }
     }
-
     function stringToColour(str) {
         var hash = 0;
         for (var i = 0; i < str.length; i++) {
@@ -1371,30 +1300,15 @@
 </script>
 
 <style lang="less">
-    h3{
-        font-size: 1.3rem;
-        margin: 10px;
-    }
-    h4{
-        font-size: 1.2rem;
-        margin: 10px;
-    }
-    .inline-tip{
-        display: inline-block;
-        margin-left: 15px;
-    }
     .el-cascader .el-input {
         width: 240px;
     }
-
     .el-select .el-input {
         width: 240px;
     }
-
     .el-autocomplete .el-input {
         width: 240px;
     }
-
     header{
         font-family: "Arial Black";
         font-size: 25px;
@@ -1406,40 +1320,33 @@
         border-radius: 0 5px 5px 0;
         box-shadow: lightgrey 5px 0px 5px 2px;
     }
-
     .funny:hover{
         cursor: pointer;
         color: #0583f2
     }
-
     .list-header{
         border-bottom: 1px solid gray;
         margin: 10px 0 6px;
     }
-
     .list-container{
         height: 300px;
         overflow: auto;
     }
-
     .list-container::-webkit-scrollbar {
         width: 4px;
     }
-
     .list-container::-webkit-scrollbar-thumb {
         border-radius: 5px;
         box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
         background: rgba(0, 0, 0, 0.2);
     }
-
     .list-container::-webkit-scrollbar-track {
         box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
         border-radius: 0;
     }
-
     .left-side{
         position: absolute;
-        width: 400px;
+        width: 350px;
         transition: .5s ease;
         background-color: white;
         box-shadow: lightgrey 0px 0px 5px 5px;//边框内阴影
@@ -1449,31 +1356,26 @@
         max-height: 100%;
         overflow-y: auto;
     }
-
     .left-side::-webkit-scrollbar {
         /*滚动条整体样式*/
         width: 4px;
     }
-
     .left-side::-webkit-scrollbar-thumb {
         /*滚动条里面小方块*/
         border-radius: 5px;
         box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
         background: rgba(0, 0, 0, 0.2);
     }
-
     .left-side::-webkit-scrollbar-track {
         /*滚动条里面轨道*/
         box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
         border-radius: 0;
     }
-
     #thumb {
         width: 160px;
         height: 160px;
         pointer-events: none;
     }
-
     #thumb-container {
         position: absolute;
         right: 0;
@@ -1514,17 +1416,14 @@
     .formlabelfont {
         font-size: 12px;
     }
-
     .container::-webkit-scrollbar { 
         display: none;
     }
-
     .labeltext {
         font-size: 16px;
         font-family: SimSun;
         fill: #ff7438;
     }
-
     .nodetext {
         font-size: 12px;
         font-family: SimSun;
@@ -1532,12 +1431,10 @@
         position: relative;
         pointer-events: none;
     }
-
     //箭头颜色
     #resolved{
         fill:#FFD700;
     }
-
     //滑动鼠标显示连线效果，移到网页外连线消失
     /*.edgelabel{
         stroke-width: 6px;
@@ -1547,7 +1444,6 @@
         stroke-dashoffset: -220;
         transition: 1s all ease
     }
-
     svg:hover .edgelabel {
         stroke-dasharray: 70 0;
         stroke-width: 3px;
@@ -1557,7 +1453,6 @@
     .edgelabel{
     stroke:#FFD700;
     }
-
     //    字体火焰效果
     .highlighted {
         font-style:italic;
@@ -1582,7 +1477,6 @@
             stroke-dashoffset: 0;
         }
     }
-
     .linetext {
         font-size: 12px;
         font-weight: bold;
@@ -1591,48 +1485,39 @@
         color: #000;
         fill-opacity: 1;
     }
-
     /*.bling{ animation: alarm 0.4s  ease-in  infinite ; fill:yellow; font-weight: bold;}
     @keyframes alarm {
         0%{ fill:#FF9966;}
         50%{ fill:#FF3333;}
         100%{ fill:#FF9966;}
     }*/
-
     .svg {
         position: relative;
         width: 100%;
         height: 100%;
     }
-
     .node{
         position: relative;
     }
-
     .node:hover{
         cursor: pointer;
     }
-
     .disabled{
         pointer-events: none;
     }
-
     .disabled .itemname{
         color: gray;
     }
-
     .disabled .require-info{
         color: #FF0000;
         opacity: 1;
     }
-
     .require-info{
         opacity: 0;
     }
     #branches,#usecase,#uncoverbranch,#coverrate{
         text-align:center;
     }
-
     .hjr-list-item{
         text-align: left;
         padding: 8px;
@@ -1641,7 +1526,6 @@
         border-style: solid;
         margin: 2px 0;
     }
-
     .hjr-list-item:hover{
         background-color: lightgray;
     }
