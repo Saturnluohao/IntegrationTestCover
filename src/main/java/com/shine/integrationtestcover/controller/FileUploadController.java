@@ -27,9 +27,12 @@ public class FileUploadController {
         String result = "";
         if (!file.isEmpty()) {
             try {
+                //新建一个空文件，并创建输出流
                 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(baseConfig.getUploadedFilePath() + file.getOriginalFilename())));
+                //将前端传来的文件写入新建的文件
                 System.out.println(file.getName());
                 out.write(file.getBytes());
+                //清空并关闭输入流
                 out.flush();
                 out.close();
             } catch (FileNotFoundException e) {
