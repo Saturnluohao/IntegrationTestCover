@@ -524,10 +524,10 @@
                 let formData=new FormData();
                 formData.append('jar', jarFile);
                 formData.append('dep', depList);
-                uploadNewProject({
-                    info:this.jarInfo,
-                    formData
+                Object.keys(this.jarInfo).forEach(key=>{
+                    formData.append(key, this.jarInfo[key]);
                 })
+                uploadNewProject(formData)
             },
 // -- card 上传项目
 
