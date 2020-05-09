@@ -5,6 +5,7 @@ import com.shine.integrationtestcover.service.jarOpt.JarInfoService;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,11 +42,17 @@ public class JarController {
 
     //添加一个 jar 包信息
     @PostMapping(value = "/addJar")
-    public String addJar(JarInfo jarInfo, @RequestPart("file")MultipartFile file){
+    public ResponseEntity<String> addJar(JarInfo jarInfo, @RequestPart("file")MultipartFile file){
         jarInfo.setTime(new Date());
         System.out.println(jarInfo.toString());
         int result = jarInfoService.insert(jarInfo);
-        return "插入的结果是：" + result + "\n文件：" + file;
+        if(result == 1){
+            return ResponseEntity.ok().body("上传成功");
+        }
+        else{
+            return ResponseEntity.badRequest().body("上传失败");
+        }
+
     }
 
     //删除一个 jar 包信息
@@ -55,5 +62,14 @@ public class JarController {
         return "删除的结果是："+result;
     }
 
-    //更新一个 jar 包信息
+    //添加一个 jar 包信息
+    @GetMapping(value = "/testforjxh")
+    public ResponseEntity<String> test(int cond){
+        if(cond == 1){
+            return ResponseEntity.ok().body("上传成功");
+        }
+        else{
+            return ResponseEntity.badRequest().body("上传失败");
+        }
+    }
 }

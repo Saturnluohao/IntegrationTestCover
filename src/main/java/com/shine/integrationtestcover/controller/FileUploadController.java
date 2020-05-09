@@ -1,7 +1,9 @@
 package com.shine.integrationtestcover.controller;
 
 import com.shine.integrationtestcover.config.BaseConfig;
+import com.shine.integrationtestcover.domain.JarInfo;
 import com.shine.integrationtestcover.service.ProgramInstrumentService;
+import com.shine.integrationtestcover.service.jarOpt.JarInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -19,22 +22,29 @@ import java.util.HashMap;
 public class FileUploadController {
     @Autowired
     private BaseConfig baseConfig;
-
+    @Autowired
+    private JarInfoService jarInfoService;
 
     @RequestMapping(value = "/uploadJar")
     @ResponseBody
-    public String uploadJar(@RequestParam("file") MultipartFile file){
+    public String uploadJar(JarInfo jarInfo, @RequestPart("file") MultipartFile file){
         String result = "";
         if (!file.isEmpty()) {
             try {
-                //新建一个空文件，并创建输出流
-                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(baseConfig.getUploadedFilePath() + file.getOriginalFilename())));
+                //新建一个空文件，并创建输出流。pathname值为：
+                String pathname = baseConfig.getUploadedFilePath() + file.getOriginalFilename();
+                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(pathname)));
                 //将前端传来的文件写入新建的文件
-                System.out.println(file.getName());
                 out.write(file.getBytes());
                 //清空并关闭输入流
                 out.flush();
                 out.close();
+
+                //将jar包信息存入数据库
+                jarInfo.setTime(new Date());
+                jarInfoService.insert(jarInfo);
+
+                result = "上传成功";
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 result =  "上传失败," + e.getMessage();
@@ -42,7 +52,6 @@ public class FileUploadController {
                 e.printStackTrace();
                 result =  "上传失败," + e.getMessage();
             }
-            result = "上传成功";
         } else {
             result =  "上传失败，因为文件是空的.";
         }
@@ -88,9 +97,25 @@ public class FileUploadController {
         HashMap<String, Object> result = new HashMap<>();
         result.put("result", filenames);
         return result;
-
     }
 
+    //删除一个 jar 包信息
+    @DeleteMapping(value = "/deleteJar")
+    public String deleteJar(String name){
+        String result;
+        if(name != null) {
+            //要删除文件的url
+            String pathname = baseConfig.getUploadedFilePath() + name;
+            //删除jar文件
 
+            //在数据库中删除JarInfo
+            jarInfoService.deleteByName(name);
 
+            result = "删除成功";
+        }
+        else{
+            result = "请指明要删除文件的名字！";
+        }
+        return "删除的结果是："+result;
+    }
 }
