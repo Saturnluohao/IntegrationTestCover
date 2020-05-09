@@ -522,7 +522,8 @@
                     return element.raw;
                 })
                 let formData=new FormData();
-                formData.append('jar', jarFile);
+                formData.append('file', jarFile);
+                formData.append('name', jarFile.name)
                 formData.append('dep', depList);
                 Object.keys(this.jarInfo).forEach(key=>{
                     formData.append(key, this.jarInfo[key]);
