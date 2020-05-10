@@ -6,6 +6,7 @@ import com.shine.integrationtestcover.service.ProgramInstrumentService;
 import com.shine.integrationtestcover.service.jarOpt.JarInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,9 +26,8 @@ public class FileUploadController {
     @Autowired
     private JarInfoService jarInfoService;
 
-    @RequestMapping(value = "/uploadJar")
-    @ResponseBody
-    public String uploadJar(JarInfo jarInfo, @RequestPart("file") MultipartFile file){
+    @PostMapping(value = "/uploadJar")
+    public ResponseEntity<String> uploadJar(JarInfo jarInfo, @RequestPart("file") MultipartFile file){
         String result = "";
         if (!file.isEmpty()) {
             try {
@@ -45,6 +45,7 @@ public class FileUploadController {
                 jarInfoService.insert(jarInfo);
 
                 result = "上传成功";
+                return ResponseEntity.ok().body(result);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 result =  "上传失败," + e.getMessage();
@@ -54,11 +55,11 @@ public class FileUploadController {
             }
         } else {
             result =  "上传失败，因为文件是空的.";
+            return ResponseEntity.status(400).body(result);
         }
-        return result;
+        return ResponseEntity.status(500).body(result);
     }
-    @RequestMapping(value = "/uploadRegressiveJar")
-    @ResponseBody
+    @PostMapping(value = "/uploadRegressiveJar")
     public String uploadRegressiveJar(@RequestParam("file") MultipartFile file){
         String result = "";
         if (!file.isEmpty()) {
@@ -81,8 +82,7 @@ public class FileUploadController {
         }
         return result;
     }
-    @RequestMapping(value = "/fileList", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/fileList")
     public HashMap<String, Object> getFileList(){
         File uploadedDirectory = new File(baseConfig.getUploadedFilePath());
         ArrayList filenames = new ArrayList();
@@ -101,21 +101,29 @@ public class FileUploadController {
 
     //删除一个 jar 包信息
     @DeleteMapping(value = "/deleteJar")
-    public String deleteJar(String name){
+    public ResponseEntity<String> deleteJar(String name){
         String result;
         if(name != null) {
             //要删除文件的url
             String pathname = baseConfig.getUploadedFilePath() + name;
-            //删除jar文件
+            //删除操作
+            File file = new File(pathname);
+            if(file.exists()){
+                //删除Jar文件
+                file.delete();
+                //在数据库中删除JarInfo
+                jarInfoService.deleteByName(name);
 
-            //在数据库中删除JarInfo
-            jarInfoService.deleteByName(name);
-
-            result = "删除成功";
+                result = "删除成功";
+                return ResponseEntity.ok().body(result);
+            }
+            else{
+                result = "要删除的文件不存在！";
+            }
         }
         else{
             result = "请指明要删除文件的名字！";
         }
-        return "删除的结果是："+result;
+        return ResponseEntity.badRequest().body(result);
     }
 }

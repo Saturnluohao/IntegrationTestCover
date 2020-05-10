@@ -56,11 +56,11 @@ public class JarController {
     }
 
     //删除一个 jar 包信息
-    @DeleteMapping(value = "/deleteJar")
-    public String deleteJar(String name){
-        int result = jarInfoService.deleteByName(name);
-        return "删除的结果是："+result;
-    }
+//    @DeleteMapping(value = "/deleteJar")
+//    public String deleteJar(String name){
+//        int result = jarInfoService.deleteByName(name);
+//        return "删除的结果是："+result;
+//    }
 
     //添加一个 jar 包信息
     @GetMapping(value = "/testforjxh")
@@ -69,7 +69,7 @@ public class JarController {
             return ResponseEntity.ok().body("上传成功");
         }
         else{
-            return ResponseEntity.badRequest().body("上传失败");
+            return ResponseEntity.status(500).body("上传失败");
         }
     }
 }
