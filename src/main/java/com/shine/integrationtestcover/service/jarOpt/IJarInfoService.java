@@ -13,14 +13,18 @@ import java.util.List;
  * @Author: <a href="abc@qq.com">abc</a>
  */
 public interface IJarInfoService {
-    //查看所有的 jar 包信息
+    //查看所有的项目的所有版本
     List<JarInfo> selectAll();
-    //根据名字查看某个 jar 包信息
-    JarInfo selectByName(String name);
-    //上传 jar 包信息
+    //查看某个项目的所有版本
+    List<JarInfo> selectByProject(String prj_name);
+    //查看某个项目的某个版本
+    JarInfo selectByPK(String prj_name, String version);
+    //上传某个项目的某个版本
     int insert(JarInfo jarInfo);
-    //删除某个 jar 包信息
-    int deleteByName(String name);
+    //删除某项目的某个版本
+    int deleteByPK(String prj_name, String version);
+    //删除一个项目
+    int deleteProject(String prj_name);
     //更改某个 jar 包信息
     int update(JarInfo jarInfo);
 }

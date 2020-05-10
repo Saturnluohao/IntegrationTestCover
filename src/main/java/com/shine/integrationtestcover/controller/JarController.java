@@ -1,5 +1,6 @@
 package com.shine.integrationtestcover.controller;
 
+import com.shine.integrationtestcover.config.BaseConfig;
 import com.shine.integrationtestcover.domain.JarInfo;
 import com.shine.integrationtestcover.service.jarOpt.JarInfoService;
 import org.apache.ibatis.annotations.Delete;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -24,6 +26,8 @@ import java.util.List;
 public class JarController {
     @Autowired
     private JarInfoService jarInfoService;
+    @Autowired
+    private BaseConfig baseConfig;
 
     //查看所有的 jar 包信息
     @GetMapping(value = "/showAllJars")
@@ -34,11 +38,11 @@ public class JarController {
     }
 
     //查看某一个 jar 包信息
-    @GetMapping(value = "/showOneJar")
-    public String showOne(String name){
-        JarInfo jarInfo = jarInfoService.selectByName(name);
-        return jarInfo.toString();
-    }
+//    @GetMapping(value = "/showOneJar")
+//    public String showOne(String name){
+//        JarInfo jarInfo = jarInfoService.selectByName(name);
+//        return jarInfo.toString();
+//    }
 
     //添加一个 jar 包信息
     @PostMapping(value = "/addJar")
@@ -62,14 +66,13 @@ public class JarController {
 //        return "删除的结果是："+result;
 //    }
 
-    //添加一个 jar 包信息
     @GetMapping(value = "/testforjxh")
-    public ResponseEntity<String> test(int cond){
-        if(cond == 1){
-            return ResponseEntity.ok().body("上传成功");
+    public String test(String prj_name){
+        String prj_path = baseConfig.getProjectPath(prj_name);
+        File file = new File(prj_path);
+        if(file.exists()){
+            return "存在";
         }
-        else{
-            return ResponseEntity.status(500).body("上传失败");
-        }
+        return "不存在";
     }
 }

@@ -2,10 +2,9 @@ package com.shine.integrationtestcover.controller;
 
 import com.shine.integrationtestcover.config.BaseConfig;
 import com.shine.integrationtestcover.domain.JarInfo;
-import com.shine.integrationtestcover.service.ProgramInstrumentService;
+import com.shine.integrationtestcover.service.DirService;
 import com.shine.integrationtestcover.service.jarOpt.JarInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.system.ApplicationHome;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +13,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @Author: Shine
@@ -25,40 +25,104 @@ public class FileUploadController {
     private BaseConfig baseConfig;
     @Autowired
     private JarInfoService jarInfoService;
+    @Autowired
+    private DirService dirService;
 
-    @PostMapping(value = "/uploadJar")
+    //对某一个项目创建一个版本
+    @PostMapping(value = "/createVersion")
     public ResponseEntity<String> uploadJar(JarInfo jarInfo, @RequestPart("file") MultipartFile file){
-        String result = "";
-        if (!file.isEmpty()) {
-            try {
-                //新建一个空文件，并创建输出流。pathname值为：
-                String pathname = baseConfig.getUploadedFilePath() + file.getOriginalFilename();
-                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(pathname)));
-                //将前端传来的文件写入新建的文件
-                out.write(file.getBytes());
-                //清空并关闭输入流
-                out.flush();
-                out.close();
-
-                //将jar包信息存入数据库
-                jarInfo.setTime(new Date());
-                jarInfoService.insert(jarInfo);
-
-                result = "上传成功";
-                return ResponseEntity.ok().body(result);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                result =  "上传失败," + e.getMessage();
-            } catch (IOException e) {
-                e.printStackTrace();
-                result =  "上传失败," + e.getMessage();
-            }
-        } else {
-            result =  "上传失败，因为文件是空的.";
-            return ResponseEntity.status(400).body(result);
+        //判断项目是否存在
+        File f = new File(baseConfig.getProjectPath(jarInfo.getPrj_name()));
+        if(!f.exists()){
+            return ResponseEntity.badRequest().body("项目不存在！");
         }
-        return ResponseEntity.status(500).body(result);
+        //判断该版本是否存在
+        String version_path = baseConfig.getVersionPath(jarInfo.getPrj_name(), jarInfo.getVersion());
+        f = new File(version_path);
+        if(f.exists()){
+            return ResponseEntity.badRequest().body("该版本已存在！");
+        }
+
+        //判断文件是否为空
+        if(file.isEmpty()){
+            return ResponseEntity.badRequest().body("请上传 Jar 包！");
+        }
+
+        //一切就绪
+        try {
+            //创建一个版本文件夹
+            f.mkdirs();
+
+            //新建一个依赖文件夹
+            String dependency_path = version_path + "dependency";
+            f = new File(dependency_path);
+            f.mkdirs();
+
+            //新建一个空文件，并创建输出流。
+            String pathname = version_path + "source.jar";
+            BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(pathname)));
+            //将前端传来的文件写入新建的文件
+            out.write(file.getBytes());
+            //清空并关闭输入流
+            out.flush();
+            out.close();
+
+            //将jar包信息存入数据库
+            jarInfo.setTime(new Date());
+            jarInfoService.insert(jarInfo);
+
+            return ResponseEntity.ok().body("上传成功");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("上传失败," + e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("上传失败," + e.getMessage());
+        }
     }
+
+    //上传依赖
+    @PostMapping(value = "/uploadDep")
+    public ResponseEntity<String> uploadDep(String prj_name, String version, @RequestPart("file")MultipartFile file){
+        //判断项目是否存在
+        File f = new File(baseConfig.getProjectPath(prj_name));
+        if(!f.exists()){
+            return ResponseEntity.badRequest().body("项目不存在！");
+        }
+
+        //判断该版本是否存在
+        String version_path = baseConfig.getVersionPath(prj_name, version);
+        f = new File(version_path);
+        if(!f.exists()){
+            return ResponseEntity.badRequest().body("该版本不存在！");
+        }
+
+        //判断文件是否为空
+        if(file.isEmpty()){
+            return ResponseEntity.badRequest().body("请上传依赖文件！");
+        }
+
+        //将文件存入依赖文件夹
+        try {
+            String dependency_path = baseConfig.getDependencyPath(prj_name, version) + file.getOriginalFilename();
+            BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(dependency_path)));
+            //将前端传来的文件写入新建的文件
+            out.write(file.getBytes());
+            //清空并关闭输入流
+            out.flush();
+            out.close();
+            return ResponseEntity.ok().body("上传成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("上传失败：" + e.getMessage());
+        }
+    }
+
+    @GetMapping(value = "/allVersion")
+    public ResponseEntity<List<JarInfo>> allVersion(String prj_name){
+        return ResponseEntity.ok().body(jarInfoService.selectByProject(prj_name));
+    }
+
     @PostMapping(value = "/uploadRegressiveJar")
     public String uploadRegressiveJar(@RequestParam("file") MultipartFile file){
         String result = "";
@@ -82,6 +146,7 @@ public class FileUploadController {
         }
         return result;
     }
+
     @GetMapping(value = "/fileList")
     public HashMap<String, Object> getFileList(){
         File uploadedDirectory = new File(baseConfig.getUploadedFilePath());
@@ -99,31 +164,27 @@ public class FileUploadController {
         return result;
     }
 
-    //删除一个 jar 包信息
-    @DeleteMapping(value = "/deleteJar")
-    public ResponseEntity<String> deleteJar(String name){
-        String result;
-        if(name != null) {
-            //要删除文件的url
-            String pathname = baseConfig.getUploadedFilePath() + name;
-            //删除操作
-            File file = new File(pathname);
-            if(file.exists()){
-                //删除Jar文件
-                file.delete();
-                //在数据库中删除JarInfo
-                jarInfoService.deleteByName(name);
+    //删除某项目的某个版本
+    @DeleteMapping(value = "/deleteVersion")
+    public ResponseEntity<String> deleteJar(String prj_name, String version){
+        //判断项目是否存在
+        File f = new File(baseConfig.getProjectPath(prj_name));
+        if(!f.exists()){
+            return ResponseEntity.badRequest().body("项目不存在！");
+        }
 
-                result = "删除成功";
-                return ResponseEntity.ok().body(result);
-            }
-            else{
-                result = "要删除的文件不存在！";
-            }
+        //判断该版本是否存在
+        String version_path = baseConfig.getVersionPath(prj_name, version);
+        f = new File(version_path);
+        if(!f.exists()){
+            return ResponseEntity.badRequest().body("该版本不存在！");
         }
-        else{
-            result = "请指明要删除文件的名字！";
-        }
-        return ResponseEntity.badRequest().body(result);
+
+        //删除Version文件夹
+        dirService.deleteDir(version_path);
+        //在数据库中删除JarInfo
+        jarInfoService.deleteByPK(prj_name, version);
+
+        return ResponseEntity.ok().body("删除成功");
     }
 }
