@@ -83,3 +83,14 @@ export function uploadRecord(events) {
         body
     });
 }
+
+export function uploadNewProject(data) {
+    return fetch({
+        url: '/apiurl/uploadJar',
+        method: "POST",
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+        data
+    });
+}
