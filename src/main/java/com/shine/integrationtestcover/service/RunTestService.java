@@ -13,6 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Future;
 
@@ -273,7 +274,6 @@ public class RunTestService {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.matches(".*CALL.*")) {
-                    //methodsrelationship.add((!line.contains("=>")? line : line.split("=>")[0]).replace("/", "."));
                     methodsrelationship.add(line.split("=>")[0].replace("/", "."));
                 }
             }
@@ -304,7 +304,7 @@ public class RunTestService {
         this.runprocess = finishtask;
 
         try {
-            File file = new File(this.jarpath + "//" + this.jarname + ".jar");//加载外部jar包
+            File file = new File(this.jarpath + File.separator + this.jarname + ".jar");//加载外部jar包
             URL url = file.toURI().toURL();
 
             File xFile = new File(this.javafilepath);
@@ -398,6 +398,82 @@ public class RunTestService {
             }
         }
         logger.info("==***===========" + Thread.currentThread().getName() + "异步");
+    }
+
+    public void runAllWithMaven() throws Exception {
+        String MAVEN_PATH = "";
+        String FILE_PATH = "";
+        File testBaseDir = new File(FILE_PATH);
+        logger.info(execCmd(MAVEN_PATH + " " + "test", testBaseDir));
+        // get all the files in ./target/test-output
+        List<String> methodsRelationship = new LinkedList<>();
+        LinkedList<File> fileList = new LinkedList<>();
+        LinkedList<File> dirList = new LinkedList<>();
+        dirList.add(new File(FILE_PATH + "/target/test-output"));
+        while (dirList.size() != 0) {
+            File dir = dirList.pop();
+            File[] subs = dir.listFiles();
+            if (subs == null) return;
+            for (File file : subs) {
+                if (file.isFile()) {
+                    fileList.add(file);
+                } else {
+                    dirList.add(file);
+                }
+            }
+        }
+        for (File file : fileList) {
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(file));
+            BufferedReader br = new BufferedReader(reader);
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.matches(".*CALL.*")) {
+                    methodsRelationship.add(line.split("=>")[0].replace("/", "."));
+                }
+            }
+            br.close();
+            reader.close();
+        }
+        this.runresults = methodsRelationship;
+        int totalTestNum = fileList.size();
+        this.runprocess = new LinkedList<Integer>();
+        this.runprocess.add(totalTestNum);
+        this.runprocess.add(totalTestNum);
+    }
+    public static String execCmd(String cmd, File dir) throws Exception {
+        StringBuilder result = new StringBuilder();
+        Process process = null;
+        BufferedReader bufrIn = null;
+        BufferedReader bufrError = null;
+        try {
+            process = Runtime.getRuntime().exec(cmd, null, dir);
+            process.waitFor();
+            bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+            bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
+            String line = null;
+            while ((line = bufrIn.readLine()) != null) {
+                result.append(line).append('\n');
+            }
+            while ((line = bufrError.readLine()) != null) {
+                result.append(line).append('\n');
+            }
+        } finally {
+            closeStream(bufrIn);
+            closeStream(bufrError);
+            if (process != null) {
+                process.destroy();
+            }
+        }
+        return result.toString();
+    }
+    private static void closeStream(Closeable stream) {
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (Exception e) {
+                // nothing
+            }
+        }
     }
 
     public HashMap<String, List<String>> regressionCompare(String projectname) throws Exception {
