@@ -13,10 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Future;
 
 /**
@@ -173,10 +170,7 @@ public class RunTestService {
             //String command=
             // "javac -cp C:\Users\22831\Desktop\lib\IntegrationTestCover.jar;C:\Users\22831\Desktop\lib\junit-4.10.jar com\shine\integrationtestcover\service\GraphServiceTest.java";
             String command = "javac -cp " + jarpath + jarname + ".jar" + ";" + testwaypath + testwayname + ".jar" + " " + javafilepath + packagename + "//" + javafilename + ".java";
-             System.out.println(command);
-             if(command.equals("javac -cp C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/runTestCase/bean-query/bean-query.jar;C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/uploadedJar/junit-4.10.jar C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/runTestCase/bean-query/cn//jimmyshi//beanquery//comparators//PropertyComparatorTest.java")){
-                 System.out.println("jhjj");
-             }
+            System.out.println(command);
             Process process = Runtime.getRuntime().exec(command);
             process.waitFor();
         } catch (Exception e) {
@@ -197,7 +191,6 @@ public class RunTestService {
             File file = new File(this.getJarpath() + "//" + this.getJarname() + ".jar");//加载外部jar包
             URL url = file.toURI().toURL();
             File xFile = new File(this.getJavafilepath());
-            if (xFile == null) System.out.println("not find" + javafilename);
             URL url2 = xFile.toURL();
             URLClassLoader ClassLoader = new URLClassLoader(new URL[]{url2, url});
             Class xClass = ClassLoader.loadClass(packagename + "." + javafilename);//一个java文件
@@ -218,7 +211,7 @@ public class RunTestService {
     }
 
     /*
-    invoke methods:filename是java文件的名字,invoke 一个java文件的某个方法,返回调用关系
+        invoke methods:filename是java文件的名字,invoke 一个java文件的某个方法,返回调用关系
      */
     @Async
     public List<String> invokeMethod(String javafilename, String methodname) {
@@ -247,7 +240,6 @@ public class RunTestService {
             URLClassLoader ClassLoader = new URLClassLoader(new URL[]{url2, url});
             //Class xClass = ClassLoader.loadClass("com.example.demo.controller.TestMethod");
             Class xClass = ClassLoader.loadClass(packagename + "." + javafilename);
-            Method[] method = xClass.getDeclaredMethods();
             FileOutputStream bos = new FileOutputStream(this.javafilepath + "//output-" + javafilename + ".txt");
             System.setOut(new PrintStream(bos));
             //Method xMethod = xClass.getDeclaredMethod("te11");//先定义跑里面的一个方法
@@ -276,7 +268,6 @@ public class RunTestService {
         try {
             String filepath = this.javafilepath + "//output-" + javafilename + ".txt";
             File file = new File(filepath);
-            if (file == null) System.out.println("txt生成失败!!!");
             InputStreamReader reader = new InputStreamReader(new FileInputStream(file));
             BufferedReader br = new BufferedReader(reader);
             String line;
@@ -368,7 +359,7 @@ public class RunTestService {
     }
 
     /*
-    跑项目下面的所有test文件,返回n和m两个数
+        跑项目下面的所有test文件,返回n和m两个数
     */
     @Async
     public void runAll() throws Exception {
@@ -395,8 +386,8 @@ public class RunTestService {
             if (f.getName().contains(".java")) {
                 String filename = f.getName().replace(".java", "");
                 List<String> m = getMethods(filename);
-                for (int i = 0; i < m.size(); i++) {
-                    results.addAll(invokeMethod(filename, m.get(i)));
+                for (String s : m) {
+                    results.addAll(invokeMethod(filename, s));
                     task++;
                     finishtask.clear();
                     finishtask.add(task);
@@ -407,7 +398,6 @@ public class RunTestService {
             }
         }
         logger.info("==***===========" + Thread.currentThread().getName() + "异步");
-
     }
 
     public HashMap<String, List<String>> regressionCompare(String projectname) throws Exception {
@@ -490,7 +480,7 @@ public class RunTestService {
 //        System.out.println("path" + path);
         File packagepath = new File(path);
         if (packagepath.listFiles() == null) return false;
-        for (File f : packagepath.listFiles()) {
+        for (File f : Objects.requireNonNull(packagepath.listFiles())) {
             System.out.println("file" + f.getName());
             if (f.getName().equals(javafilename + ".class")) {
                 return true;
