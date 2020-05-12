@@ -5,10 +5,11 @@
 
 import fetch from '@/utils/fetch'
 
-export function getUploadedFileList() {
+export function getUploadedFileList(data) {
     return fetch({
-        url: '/apiurl/fileList',
-        method: 'get'
+        url: '/apiurl/allVersion',
+        method: 'get',
+        paras:data
     })
 }
 
@@ -84,13 +85,52 @@ export function uploadRecord(events) {
     });
 }
 
-export function uploadNewProject(data) {
+export function createVersion(data) {
     return fetch({
-        url: '/apiurl/uploadJar',
+        url: '/apiurl/createVersion',
         method: "POST",
         headers: {
             "Content-Type": "multipart/form-data"
         },
         data
     });
+}
+
+export function getAllProj(){
+    return fetch({
+        url: '/apiurl/allProject',
+        method: 'get'
+    })
+}
+
+export function createNewProj(data){
+    return fetch({
+        url: '/apiurl/createProject',
+        method: 'get',
+        params: data
+    })
+}
+
+export function deleteProject(data){
+    return fetch({
+        url: '/apiurl/deleteProject',
+        method: 'DELETE',
+        params: data
+    })
+}
+
+export function getAllVersion(data){
+    return fetch({
+        url:'/apiurl/allVersion',
+        method:'get',
+        params: data
+    })
+}
+
+export function deleteVersion(data){
+    return fetch({
+        url: '/apiurl/deleteVersion',
+        method: 'DELETE',
+        params: data
+    })
 }

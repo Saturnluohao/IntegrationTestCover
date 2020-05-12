@@ -35,16 +35,36 @@
                         <p class="itemname">测试一个项目</P>
                         <p class="require-info">（请先上传项目）</P>
                     </template>
-                    <el-card :body-style="{ padding: '10px', 'text-align': 'center'  }" class="card">
                     <h3>选择一个测试项目</h3>
                     <el-row style="margin:10px 0">
                         <el-col :span="20">
-                            <el-select v-model="currentJar" placeholder="请选择要测试的Jar包" @visible-change="showfilelist"  @change="chooseProject($event)">
+                            <el-select v-model="currentProj" placeholder="请选择要测试项目" title="输入以新创建一个" @visible-change="showProjList"  @change="chooseProject($event)" allow-create filterable>
                                 <el-option
-                                        v-for="item in uploadedFiles"
-                                        :key="item"
+                                        v-for="(item,idx) in projectList"
+                                        :key="idx"
                                         :label="item"
                                         :value="item">
+                                        <span >{{ item }}</span>
+                                        <i style="position:absolute; right: 10px; top: 10px" class="el-icon-delete" title="删除此项目" @click.stop="deleteProj(idx)"></i>
+                                </el-option>
+                            </el-select>
+                        </el-col>
+                    </el-row>
+
+                    <el-card :body-style="{ padding: '10px', 'text-align': 'center'  }" class="card" v-show="currentProj">
+                    <h2>选择一个项目版本</h2>
+                    <el-row style="margin:10px 0">
+                        <el-col :span="20">
+                            <el-select v-model="currentJar" placeholder="请选择要测试版本" @visible-change="showfilelist"  @change="chooseJar($event)" >
+                                <el-option
+                                        v-for="(item,idx) in uploadedFiles"
+                                        :key="idx"
+                                        :label="idx"
+                                        :value="item.version"
+                                        :title="item.description">
+                                        <strong style="margin-right: 30px">Ver: {{ item.version }}</strong>
+                                        <span>Ath: {{ item.author}}</span>
+                                        <i style="position:absolute; right: 10px; top: 10px" class="el-icon-delete" title="删除此版本" @click.stop="deleteVer(idx)"></i>
                                 </el-option>
                             </el-select>
                         </el-col>
@@ -358,7 +378,12 @@
         getTestRunningStatus, // 获取指定任务的执行进度，需要一个参数 (task_id_Key）
         getInvokingResults,   // 获取测试用例执行结果，需要一个参数 (task_id_Key）
         postRegression,       // 回归测试上传新旧包，传的参数为 regression.info
-        uploadNewProject
+        createVersion,        // 向项目中添加一个版本的jar文件
+        getAllVersion,        // 获取项目中所有的jar文件
+        deleteProject,        // 删除一个项目
+        createNewProj,        // 创建一个新项目
+        getAllProj,           // 获取所有项目列表
+        deleteVersion         // 删除项目中的一个版本
     } from '@/api/methodcallrelationgraph.js'
     import * as d3 from 'd3'
     import { setInterval } from 'timers';
@@ -391,7 +416,9 @@
                     version:'',
                     description:'',
                 },
+                currentProj:'',
                 currentJar:'',
+                projectList:[],
                 form: {
                     packages:'',
                     packagesCall:''
@@ -528,17 +555,30 @@
                 Object.keys(this.jarInfo).forEach(key=>{
                     formData.append(key, this.jarInfo[key]);
                 })
-                uploadNewProject(formData)
+                createVersion(formData).then(res=>{
+                    console.log(res)
+                    this.$message.success("上传成功");
+                    this.openNewProjectModal=false;
+                }).catch(err=>{
+                    this.$message.error(err);
+                })
             },
 // -- card 上传项目
 
 // --- card 调用关系图的生成
+            showProjList(open){
+                if(open){
+                    getAllProj().then(res=>{
+                        this.projectList=res;
+                    })
+                }
+            },
             showfilelist(open){     // 用于 选择 项目时，visible-change 事件 显示 下拉框 时 触发
                 if(open) {
                     let _this = this
                     // 从 服务端 拉取 项目 列表
-                    getUploadedFileList().then(response => {
-                        _this.uploadedFiles = response.result;
+                    getUploadedFileList({prj_name: this.currentProj}).then(response => {
+                        _this.uploadedFiles = responnse;
                         getTestCaseList().then(response=>{
                             this.testCaseMap=response.result;
                             this.getTestProject(this.currentJar);
@@ -640,12 +680,40 @@
 // -- card 上传测试用例
 
 // --- card 运行测试用例
-            chooseProject(prov) {
+            chooseProject(proj){
+                if(this.projectList.indexOf(proj)==-1){
+                    createNewProj({prj_name: proj}).then(res=>{
+                        this.$message.success(res);
+                        this.currentJar='';
+                    }).catch(err=>{
+                        this.$message.error(err);
+                    })
+                }
+            },
+            deleteProj(idx){
+                deleteProject({prj_name:this.projectList[idx]}).then(res=>{
+                    this.$message.success(res);
+                    if(this.projectList[idx]==this.currentProj)
+                        this.currentProj='';
+                    this.projectList.splice(idx, 1);
+                }).catch(err=>{
+                    this.$message.error(err);
+                })
+            },
+            chooseJar(prov) {
                 this.form.packages='';
                 this.form.packagesCall='';
                 this.activeTasks=["relation"];
                 this.getTestProject(prov);
                 this.getRegressionProj(prov);
+            },
+            deleteVer(idx){
+                deleteVersion({prj_name:this.currentProj, version: this.uploadedFiles[idx].version}).then(res=>{
+                    this.$message.success(res);
+                    this.uploadedFiles.splice(idx, 1);
+                }).catch(err=>{
+                    this.$message.error(err);
+                })
             },
             getTestProject(prov){
                 this.selectTestForm.selectedTestCase = '';
