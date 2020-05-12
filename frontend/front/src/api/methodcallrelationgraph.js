@@ -134,3 +134,14 @@ export function deleteVersion(data){
         params: data
     })
 }
+
+export function uploadDependency(data){
+    return fetch({
+        url: '/apiurl/uploadDep',
+        method: 'POST',
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+        data
+    })
+}

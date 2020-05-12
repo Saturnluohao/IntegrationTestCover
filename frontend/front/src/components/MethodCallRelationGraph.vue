@@ -383,7 +383,8 @@
         deleteProject,        // 删除一个项目
         createNewProj,        // 创建一个新项目
         getAllProj,           // 获取所有项目列表
-        deleteVersion         // 删除项目中的一个版本
+        deleteVersion,        // 删除项目中的一个版本
+        uploadDependency
     } from '@/api/methodcallrelationgraph.js'
     import * as d3 from 'd3'
     import { setInterval } from 'timers';
@@ -545,23 +546,30 @@
                     return;
                 }
                 let jarFile=this.jar.raw;
-                let depList=this.$refs.uploadDep.$refs['upload-inner'].fileList.map(element=>{
-                    return element.raw;
-                })
+                // let depList=
                 let formData=new FormData();
                 formData.append('file', jarFile);
-                formData.append('name', jarFile.name)
-                formData.append('dep', depList);
+                formData.append('prj_name', this.currentProj)
+                // formData.append('dep', depList);
                 Object.keys(this.jarInfo).forEach(key=>{
                     formData.append(key, this.jarInfo[key]);
-                })
+                });
                 createVersion(formData).then(res=>{
-                    console.log(res)
-                    this.$message.success("上传成功");
-                    this.openNewProjectModal=false;
-                }).catch(err=>{
+                    // this.$message.success("上传成功");
+                    Promise.all(this.$refs.uploadDep.$refs['upload-inner'].fileList.map(element=>{
+                        let formData = new FormData();
+                        formData.append('prj_name', this.currentProj);
+                        formData.append('version', this.jarInfo.version);
+                        formData.append('file', element.raw);
+                        return uploadDependency(formData);
+                    })).then(res=>{
+                        this.$message.success("上传成功");
+                        this.openNewProjectModal=false;
+                })
+                .catch(err=>{
                     this.$message.error(err);
                 })
+                });
             },
 // -- card 上传项目
 
