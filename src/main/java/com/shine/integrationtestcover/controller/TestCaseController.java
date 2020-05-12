@@ -37,10 +37,7 @@ public class TestCaseController {
     public List<String> getMethods(String projectname, String testcasename) {
         runTestService.initate(projectname, true);
         runTestService.compileJava(testcasename);
-        List<String> methods = new LinkedList<>();
-
-        methods = runTestService.getMethods(testcasename);
-        return methods;
+        return runTestService.getMethods(testcasename);
     }
 
     @RequestMapping(value = "/runTestCase", method = RequestMethod.GET)

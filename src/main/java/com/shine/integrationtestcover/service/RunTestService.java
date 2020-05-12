@@ -13,10 +13,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.Future;
 
 /**
@@ -173,10 +171,7 @@ public class RunTestService {
             //String command=
             // "javac -cp C:\Users\22831\Desktop\lib\IntegrationTestCover.jar;C:\Users\22831\Desktop\lib\junit-4.10.jar com\shine\integrationtestcover\service\GraphServiceTest.java";
             String command = "javac -cp " + jarpath + jarname + ".jar" + ";" + testwaypath + testwayname + ".jar" + " " + javafilepath + packagename + "//" + javafilename + ".java";
-             System.out.println(command);
-             if(command.equals("javac -cp C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/runTestCase/bean-query/bean-query.jar;C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/uploadedJar/junit-4.10.jar C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/runTestCase/bean-query/cn//jimmyshi//beanquery//comparators//PropertyComparatorTest.java")){
-                 System.out.println("jhjj");
-             }
+            System.out.println(command);
             Process process = Runtime.getRuntime().exec(command);
             process.waitFor();
         } catch (Exception e) {
@@ -197,7 +192,6 @@ public class RunTestService {
             File file = new File(this.getJarpath() + "//" + this.getJarname() + ".jar");//加载外部jar包
             URL url = file.toURI().toURL();
             File xFile = new File(this.getJavafilepath());
-            if (xFile == null) System.out.println("not find" + javafilename);
             URL url2 = xFile.toURL();
             URLClassLoader ClassLoader = new URLClassLoader(new URL[]{url2, url});
             Class xClass = ClassLoader.loadClass(packagename + "." + javafilename);//一个java文件
@@ -218,7 +212,7 @@ public class RunTestService {
     }
 
     /*
-    invoke methods:filename是java文件的名字,invoke 一个java文件的某个方法,返回调用关系
+        invoke methods:filename是java文件的名字,invoke 一个java文件的某个方法,返回调用关系
      */
     @Async
     public List<String> invokeMethod(String javafilename, String methodname) {
@@ -247,7 +241,6 @@ public class RunTestService {
             URLClassLoader ClassLoader = new URLClassLoader(new URL[]{url2, url});
             //Class xClass = ClassLoader.loadClass("com.example.demo.controller.TestMethod");
             Class xClass = ClassLoader.loadClass(packagename + "." + javafilename);
-            Method[] method = xClass.getDeclaredMethods();
             FileOutputStream bos = new FileOutputStream(this.javafilepath + "//output-" + javafilename + ".txt");
             System.setOut(new PrintStream(bos));
             //Method xMethod = xClass.getDeclaredMethod("te11");//先定义跑里面的一个方法
@@ -276,13 +269,11 @@ public class RunTestService {
         try {
             String filepath = this.javafilepath + "//output-" + javafilename + ".txt";
             File file = new File(filepath);
-            if (file == null) System.out.println("txt生成失败!!!");
             InputStreamReader reader = new InputStreamReader(new FileInputStream(file));
             BufferedReader br = new BufferedReader(reader);
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.matches(".*CALL.*")) {
-                    //methodsrelationship.add((!line.contains("=>")? line : line.split("=>")[0]).replace("/", "."));
                     methodsrelationship.add(line.split("=>")[0].replace("/", "."));
                 }
             }
@@ -313,7 +304,7 @@ public class RunTestService {
         this.runprocess = finishtask;
 
         try {
-            File file = new File(this.jarpath + "//" + this.jarname + ".jar");//加载外部jar包
+            File file = new File(this.jarpath + File.separator + this.jarname + ".jar");//加载外部jar包
             URL url = file.toURI().toURL();
 
             File xFile = new File(this.javafilepath);
@@ -368,7 +359,7 @@ public class RunTestService {
     }
 
     /*
-    跑项目下面的所有test文件,返回n和m两个数
+        跑项目下面的所有test文件,返回n和m两个数
     */
     @Async
     public void runAll() throws Exception {
@@ -395,8 +386,8 @@ public class RunTestService {
             if (f.getName().contains(".java")) {
                 String filename = f.getName().replace(".java", "");
                 List<String> m = getMethods(filename);
-                for (int i = 0; i < m.size(); i++) {
-                    results.addAll(invokeMethod(filename, m.get(i)));
+                for (String s : m) {
+                    results.addAll(invokeMethod(filename, s));
                     task++;
                     finishtask.clear();
                     finishtask.add(task);
@@ -407,7 +398,82 @@ public class RunTestService {
             }
         }
         logger.info("==***===========" + Thread.currentThread().getName() + "异步");
+    }
 
+    public void runAllWithMaven() throws Exception {
+        String MAVEN_PATH = "";
+        String FILE_PATH = "";
+        File testBaseDir = new File(FILE_PATH);
+        logger.info(execCmd(MAVEN_PATH + " " + "test", testBaseDir));
+        // get all the files in ./target/test-output
+        List<String> methodsRelationship = new LinkedList<>();
+        LinkedList<File> fileList = new LinkedList<>();
+        LinkedList<File> dirList = new LinkedList<>();
+        dirList.add(new File(FILE_PATH + "/target/test-output"));
+        while (dirList.size() != 0) {
+            File dir = dirList.pop();
+            File[] subs = dir.listFiles();
+            if (subs == null) return;
+            for (File file : subs) {
+                if (file.isFile()) {
+                    fileList.add(file);
+                } else {
+                    dirList.add(file);
+                }
+            }
+        }
+        for (File file : fileList) {
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(file));
+            BufferedReader br = new BufferedReader(reader);
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.matches(".*CALL.*")) {
+                    methodsRelationship.add(line.split("=>")[0].replace("/", "."));
+                }
+            }
+            br.close();
+            reader.close();
+        }
+        this.runresults = methodsRelationship;
+        int totalTestNum = fileList.size();
+        this.runprocess = new LinkedList<Integer>();
+        this.runprocess.add(totalTestNum);
+        this.runprocess.add(totalTestNum);
+    }
+    public static String execCmd(String cmd, File dir) throws Exception {
+        StringBuilder result = new StringBuilder();
+        Process process = null;
+        BufferedReader bufrIn = null;
+        BufferedReader bufrError = null;
+        try {
+            process = Runtime.getRuntime().exec(cmd, null, dir);
+            process.waitFor();
+            bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+            bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
+            String line = null;
+            while ((line = bufrIn.readLine()) != null) {
+                result.append(line).append('\n');
+            }
+            while ((line = bufrError.readLine()) != null) {
+                result.append(line).append('\n');
+            }
+        } finally {
+            closeStream(bufrIn);
+            closeStream(bufrError);
+            if (process != null) {
+                process.destroy();
+            }
+        }
+        return result.toString();
+    }
+    private static void closeStream(Closeable stream) {
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (Exception e) {
+                // nothing
+            }
+        }
     }
 
     public HashMap<String, List<String>> regressionCompare(String projectname) throws Exception {
@@ -490,7 +556,7 @@ public class RunTestService {
 //        System.out.println("path" + path);
         File packagepath = new File(path);
         if (packagepath.listFiles() == null) return false;
-        for (File f : packagepath.listFiles()) {
+        for (File f : Objects.requireNonNull(packagepath.listFiles())) {
             System.out.println("file" + f.getName());
             if (f.getName().equals(javafilename + ".class")) {
                 return true;

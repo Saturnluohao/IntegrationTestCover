@@ -40,9 +40,9 @@ public class GraphService {
 
     public ArrayList<HashMap<String, Object>> getVertex() {
         ArrayList<HashMap<String, Object>> result = new ArrayList<>();
-        for (int i = 0; i < this.vertexResult.size(); i++) {
+        for (String s : this.vertexResult) {
             HashMap<String, Object> node = new HashMap<>();
-            node.put("name", vertexResult.get(i));
+            node.put("name", s);
             node.put("type", (new Random()).nextInt(3));
             result.add(node);
         }
@@ -71,9 +71,7 @@ public class GraphService {
         parse();
         result = new ArrayList<String>();
         ArrayList<String> vertex = new ArrayList<String>();
-        for (int i = 0; i < invokeString.size(); i++) {
-            result.add(invokeString.get(i));
-        }
+        result.addAll(invokeString);
         for (String temp : result) {
             String[] tempList = temp.split(" ");
             vertex.add(tempList[0]);
@@ -95,9 +93,8 @@ public class GraphService {
         int vertexNum = vertexResult.size();
         GraphAlo graph = new GraphAlo(vertexNum);
 
-        for (int i = 0; i < vertexResult.size(); i++) {
-            graph.insertVertex(vertexResult.get(i));
-
+        for (String s : vertexResult) {
+            graph.insertVertex(s);
         }
 
 

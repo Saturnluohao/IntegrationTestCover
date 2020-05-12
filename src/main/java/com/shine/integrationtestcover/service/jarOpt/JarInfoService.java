@@ -26,8 +26,13 @@ public class JarInfoService implements IJarInfoService{
     }
 
     @Override
-    public JarInfo selectByName(String name) {
-        return jarInfoMapper.selectByName(name);
+    public List<JarInfo> selectByProject(String prj_name) {
+        return jarInfoMapper.selectByProject(prj_name);
+    }
+
+    @Override
+    public JarInfo selectByPK(String prj_name, String version) {
+        return jarInfoMapper.selectByPK(prj_name, version);
     }
 
     @Override
@@ -36,15 +41,17 @@ public class JarInfoService implements IJarInfoService{
     }
 
     @Override
-    public int deleteByName(String name) {
-        return jarInfoMapper.deleteByName(name);
+    public int deleteByPK(String prj_name, String version) {
+        return jarInfoMapper.deleteByPK(prj_name, version);
+    }
+
+    @Override
+    public int deleteProject(String prj_name) {
+        return jarInfoMapper.deleteProject(prj_name);
     }
 
     @Override
     public int update(JarInfo jarInfo) {
         return jarInfoMapper.update(jarInfo);
     }
-
-
-
 }

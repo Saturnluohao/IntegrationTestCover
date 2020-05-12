@@ -14,9 +14,9 @@ import java.util.Date;
  */
 @Data
 public class JarInfo {
-    private String name;
-    private Date time;
+    private String prj_name;
     private String version;
     private String author;
+    private Date time;
     private String description;
 }

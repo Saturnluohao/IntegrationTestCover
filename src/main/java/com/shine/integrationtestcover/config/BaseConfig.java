@@ -38,6 +38,18 @@ public class BaseConfig {
         return this.uploadedFilePath;
     }
 
+    public String getProjectPath(String prj_name){
+        return getUploadedFilePath() + prj_name + '/';
+    }
+
+    public String getVersionPath(String prj_name, String version){
+        return getProjectPath(prj_name) + version + '/';
+    }
+
+    public String getDependencyPath(String prj_name, String version){
+        return getVersionPath(prj_name,version) + "dependency/";
+    }
+
     public String getRegressionFilePath() {
         if(this.regressionTestPath.isEmpty()) {
             this.regressionTestPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "regressionTest/";

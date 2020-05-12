@@ -15,26 +15,34 @@ import java.util.List;
  */
 @Mapper
 public interface JarInfoMapper {
-    //查看所有的 jar 包
+    //查看所有的项目的所有版本
     @Select("Select * from jar_info")
     List<JarInfo> selectAll();
 
-    //根据 name 查看某个 jar 包信息
-    @Select("select * from jar_info where name = #{name}")
-    JarInfo selectByName(String name);
+    //查看某个项目的所有版本
+    @Select("Select * from jar_info where prj_name = #{prj_name}")
+    List<JarInfo> selectByProject(String prj_name);
 
-    //上传一个 jar 包信息
-    @Insert("insert into jar_info(name,time,version,author,description) " +
-                "values(#{name},#{time},#{version},#{author},#{description});")
+    //查看某个项目的某个版本
+    @Select("select * from jar_info where prj_name = #{prj_name} and version = #{version}")
+    JarInfo selectByPK(String prj_name, String version);
+
+    //上传某个项目的某个版本
+    @Insert("insert into jar_info(prj_name,version,author,time,description) " +
+                "values(#{prj_name},#{version},#{author},#{time},#{description});")
     int insert(JarInfo jarInfo);
 
-    //根据 name 删除一个 jar 包信息
-    @Delete("delete from jar_info where name = #{name}")
-    int deleteByName(String name);
+    //删除某项目的某个版本
+    @Delete("delete from jar_info where prj_name = #{prj_name} and version = #{version}")
+    int deleteByPK(String prj_name, String version);
+
+    //删除一个项目
+    @Delete("delete from jar_info where prj_name = #{prj_name}")
+    int deleteProject(String prj_name);
 
     //更新某个 jar 包信息
     @Update("update jar_info " +
-            "set time = #{time}, version = #{version}, author = #{author}, description = #{description} " +
-            "where name = #{name}")
+            "set time = #{time}, author = #{author}, description = #{description} " +
+            "where prj_name = #{prj_name} and version = #{version}")
     int update(JarInfo jarInfo);
 }
