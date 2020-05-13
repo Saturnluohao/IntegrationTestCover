@@ -60,11 +60,19 @@
                                         v-for="(item,idx) in uploadedFiles"
                                         :key="idx"
                                         :label="idx"
-                                        :value="item.version"
-                                        :title="item.description">
-                                        <strong style="margin-right: 30px">Ver: {{ item.version }}</strong>
-                                        <span>Ath: {{ item.author}}</span>
-                                        <i style="position:absolute; right: 10px; top: 10px" class="el-icon-delete" title="删除此版本" @click.stop="deleteVer(idx)"></i>
+                                        :value="item.version">
+                                        <el-popover
+                                            placement="bottom"
+                                            :title="item.author"
+                                            width="200"
+                                            trigger="hover"
+                                            :content="item.description">
+                                            <div slot="reference">
+                                            <strong style="margin-right: 30px">Ver: {{ item.version }}</strong>
+                                            <span>{{ item.time | truncDate}}</span>
+                                            <i style="position:absolute; right: 10px; top: 10px" class="el-icon-delete" title="删除此版本" @click.stop="deleteVer(idx)"></i>
+                                            </div>
+                                        </el-popover>
                                 </el-option>
                             </el-select>
                         </el-col>
@@ -523,6 +531,11 @@
                 return (this.classMethodMap[this.adjustForm.selectedClass]||[]).filter((element, index, array)=>{
                     return index===array.indexOf(element)
                 });
+            }
+        },
+        filters:{
+            truncDate:function(str){
+                return str.substr(0, 10);
             }
         },
         methods: {
