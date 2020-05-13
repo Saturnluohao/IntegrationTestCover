@@ -9,7 +9,7 @@ export function getUploadedFileList(data) {
     return fetch({
         url: '/apiurl/allVersion',
         method: 'get',
-        paras:data
+        params:data
     })
 }
 
