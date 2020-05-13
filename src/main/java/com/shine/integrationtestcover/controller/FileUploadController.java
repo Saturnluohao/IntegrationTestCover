@@ -4,6 +4,7 @@ import com.shine.integrationtestcover.config.BaseConfig;
 import com.shine.integrationtestcover.domain.JarInfo;
 import com.shine.integrationtestcover.service.DirService;
 import com.shine.integrationtestcover.service.jarOpt.JarInfoService;
+import org.apache.tomcat.Jar;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -120,7 +121,17 @@ public class FileUploadController {
 
     @GetMapping(value = "/allVersion")
     public ResponseEntity<List<JarInfo>> allVersion(String prj_name){
-        return ResponseEntity.ok().body(jarInfoService.selectByProject(prj_name));
+        List<JarInfo> list = new ArrayList<JarInfo>();
+        JarInfo jarInfo = new JarInfo();
+        jarInfo.setTime(new Date());
+        jarInfo.setAuthor("Hidayat");
+        jarInfo.setDescription("I am handsome");
+        jarInfo.setPrj_name("project1");
+        jarInfo.setVersion("1.0");
+        list.add(jarInfo);
+        return ResponseEntity.ok().body(list);
+
+        //return ResponseEntity.ok().body(jarInfoService.selectByProject(prj_name));
     }
 
     @PostMapping(value = "/uploadRegressiveJar")
