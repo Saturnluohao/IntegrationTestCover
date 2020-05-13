@@ -586,7 +586,7 @@
                     let _this = this
                     // 从 服务端 拉取 项目 列表
                     getUploadedFileList({prj_name: this.currentProj}).then(response => {
-                        _this.uploadedFiles = responnse;
+                        _this.uploadedFiles = JSON.parse(responnse);
                         getTestCaseList().then(response=>{
                             this.testCaseMap=response.result;
                             this.getTestProject(this.currentJar);
