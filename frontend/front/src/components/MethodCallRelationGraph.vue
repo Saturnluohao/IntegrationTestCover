@@ -62,7 +62,7 @@
                                         :label="idx"
                                         :value="item.version">
                                         <el-popover
-                                            placement="bottom"
+                                            placement="right"
                                             :title="item.author"
                                             width="200"
                                             trigger="hover"
