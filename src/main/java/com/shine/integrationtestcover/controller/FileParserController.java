@@ -27,7 +27,10 @@ public class FileParserController {
 
     //生成调用关系图。prj_name和version为项目名和版本，packages为遍历范围，packagesToCall为生成范围。
     @GetMapping(value = "/relation")
-    public HashMap<String, Object> getInvokeRelationship(@RequestParam String prj_name, @RequestParam String version, @RequestParam String packages, @RequestParam String packagesToCall){
+    public HashMap<String, Object> getInvokeRelationship(@RequestParam String prj_name, @RequestParam String version,
+                                                         @RequestParam String packages, @RequestParam String packagesToCall){
+//        String prj_name = "project1";
+//        String version = "1.0";
         ParseJarService.packageNames = packages.isEmpty()? new String[]{""}: packages.split("\n");
         MethodVisitor.packageToCallNames = packagesToCall.isEmpty()? new String[]{""}: packagesToCall.split("\n");
         JarFileInput.packageNames = packages.isEmpty()? new String[]{""}: packages.split("\n");

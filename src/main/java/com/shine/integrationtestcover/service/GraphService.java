@@ -40,6 +40,7 @@ public class GraphService {
 
     public ArrayList<HashMap<String, Object>> getVertex() {
         ArrayList<HashMap<String, Object>> result = new ArrayList<>();
+        //System.out.println("vertex的个数为 ："+vertexResult.size());
         for (String s : this.vertexResult) {
             HashMap<String, Object> node = new HashMap<>();
             node.put("name", s);
@@ -62,6 +63,7 @@ public class GraphService {
         parseJarService.setFilename(filename);
         parseJarService.setPath(path);
         this.invokeString = parseJarService.getInvoking();
+        //System.out.println("invokeString的长度为："+invokeString.size());
         // System.out.println("invokeString" +invokeString.size());
     }
 
@@ -72,6 +74,7 @@ public class GraphService {
         result = new ArrayList<String>();
         ArrayList<String> vertex = new ArrayList<String>();
         result.addAll(invokeString);
+        //System.out.println("result的长度为："+result.size());
         for (String temp : result) {
             String[] tempList = temp.split(" ");
             vertex.add(tempList[0]);

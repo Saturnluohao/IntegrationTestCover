@@ -78,7 +78,7 @@ public class JarFileInput {
         try {
             //获取jar包内class路径
             File f = new File(path+ File.separator +filename);
-            System.out.println(f);
+            //System.out.println(f);
 
             if (!f.exists()) {
                 System.err.println("Jar file " + filename + " does not exist");
