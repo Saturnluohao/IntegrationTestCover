@@ -121,17 +121,17 @@ public class FileUploadController {
 
     @GetMapping(value = "/allVersion")
     public ResponseEntity<List<JarInfo>> allVersion(String prj_name){
-        List<JarInfo> list = new ArrayList<JarInfo>();
-        JarInfo jarInfo = new JarInfo();
-        jarInfo.setTime(new Date());
-        jarInfo.setAuthor("Hidayat");
-        jarInfo.setDescription("I am handsome");
-        jarInfo.setPrj_name("project1");
-        jarInfo.setVersion("1.0");
-        list.add(jarInfo);
-        return ResponseEntity.ok().body(list);
+//        List<JarInfo> list = new ArrayList<JarInfo>();
+//        JarInfo jarInfo = new JarInfo();
+//        jarInfo.setTime(new Date());
+//        jarInfo.setAuthor("Hidayat");
+//        jarInfo.setDescription("I am handsome");
+//        jarInfo.setPrj_name("project1");
+//        jarInfo.setVersion("1.0");
+//        list.add(jarInfo);
+//        return ResponseEntity.ok().body(list);
 
-        //return ResponseEntity.ok().body(jarInfoService.selectByProject(prj_name));
+        return ResponseEntity.ok().body(jarInfoService.selectByProject(prj_name));
     }
 
     @PostMapping(value = "/uploadRegressiveJar")
