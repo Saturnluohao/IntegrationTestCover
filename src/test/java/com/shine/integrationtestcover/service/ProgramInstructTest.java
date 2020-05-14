@@ -18,7 +18,7 @@ public class ProgramInstructTest {
 
     @Test
     public void test() throws IOException {
-        ProgramInstrumentService.doInstrumentation("junit-4.10.jar");
+        //ProgramInstrumentService.doInstrumentation("junit-4.10.jar");
 
         System.out.println("success!");
     }

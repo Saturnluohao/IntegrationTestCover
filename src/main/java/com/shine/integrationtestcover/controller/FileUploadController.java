@@ -72,6 +72,10 @@ public class FileUploadController {
             jarInfo.setTime(new Date());
             jarInfoService.insert(jarInfo);
 
+            //在 Instrumentation 文件夹中创建版本文件夹
+            File f2 = new File(baseConfig.getInstrumentationProjectPath(jarInfo.getPrj_name()));
+            f2.mkdirs();
+
             return ResponseEntity.ok().body("上传成功");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -121,16 +125,6 @@ public class FileUploadController {
 
     @GetMapping(value = "/allVersion")
     public ResponseEntity<List<JarInfo>> allVersion(String prj_name){
-//        List<JarInfo> list = new ArrayList<JarInfo>();
-//        JarInfo jarInfo = new JarInfo();
-//        jarInfo.setTime(new Date());
-//        jarInfo.setAuthor("Hidayat");
-//        jarInfo.setDescription("I am handsome");
-//        jarInfo.setPrj_name("project1");
-//        jarInfo.setVersion("1.0");
-//        list.add(jarInfo);
-//        return ResponseEntity.ok().body(list);
-
         return ResponseEntity.ok().body(jarInfoService.selectByProject(prj_name));
     }
 
@@ -191,8 +185,10 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body("该版本不存在！");
         }
 
-        //删除Version文件夹
+        //删除两个Version文件夹
         dirService.deleteDir(version_path);
+        String instrument_version_path = baseConfig.getInstrumentationVersionPath(prj_name, version);
+        dirService.deleteDir(instrument_version_path);
         //在数据库中删除JarInfo
         jarInfoService.deleteByPK(prj_name, version);
 
