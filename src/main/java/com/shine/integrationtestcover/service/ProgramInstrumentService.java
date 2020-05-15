@@ -3,6 +3,7 @@ package com.shine.integrationtestcover.service;
 import com.shine.integrationtestcover.config.BaseConfig;
 import com.shine.integrationtestcover.service.programInstrument.JarFileInput;
 import com.shine.integrationtestcover.service.programInstrument.ProgramInstrument;
+import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -21,34 +22,37 @@ import java.util.HashMap;
 public class ProgramInstrumentService {
 
     public static boolean isComplete = false;
-    public static HashMap<String,Integer> situation = new HashMap<>();
+    //public static HashMap<String,Integer> situation = new HashMap<>();
+    public static HashMap<Pair<String,String>,Integer> situation = new HashMap<>();
 
     @Autowired
     BaseConfig baseConfig;
 
     @Async
-    public void doInstrumentation(String fileName) throws IOException {
-        if(!situation.keySet().contains(fileName)){
-            situation.put(fileName,0);
+    public void doInstrumentation(String prj_name, String version) throws IOException {
+        String fileName = "source.jar";
+        Pair<String,String> key = new Pair<>(prj_name, version);
+        if(!situation.containsKey(key)){
+            situation.put(key,0);
         }
         //0未开始，1进行中，2已完成
-        File file = new File(baseConfig.getInstrumentationPath() + fileName);
+        //Instrumentation Path:/C:/Users/stone/Desktop/IntegrationTestCover/target/classes/instrumentation/
+        File file = new File(baseConfig.getInstrumentationVersionPath(prj_name, version) + "instrumentation.jar");
         if(file.exists()) {
             //默认项目不同版本需要在文件名上体现，即同一文件名就是同一个版本
             System.out.println("插桩已经完成过，不再进行");
-            situation.put(fileName,2);
+            situation.put(key,2);
             return;
         }
 
-        if(situation.get(fileName)==0) {
+        if(situation.get(key)==0) {
             System.out.println("进行中");
-            situation.put(fileName,1);//开始插桩
+            situation.put(key,1);//开始插桩
             //fileName 是类似 “demo.jar”的文件名
-            String getUploadedFilePath = baseConfig.getUploadedFilePath().substring(1).replace('/', '\\');
-            String getRunTestProjectPath = baseConfig.getInstrumentationPath().substring(1).replace('/', '\\');
+            String getUploadedFilePath = baseConfig.getVersionPath(prj_name, version).substring(1).replace('/', '\\');
+            String getRunTestProjectPath = baseConfig.getInstrumentationVersionPath(prj_name, version).substring(1).replace('/', '\\');
             //取得包名，建立文件夹
-            int index = fileName.lastIndexOf('.');
-            String sub = fileName.substring(0, index);
+            String sub = "source";
             mkDirectory(getUploadedFilePath + sub);
             //复制jar包到同名文件夹下，并且解压jar包
             File dir = new File(getUploadedFilePath + "\\" + sub);
@@ -77,13 +81,70 @@ public class ProgramInstrumentService {
             System.out.println(command);
             doCmd(command, dir);
             ProgramInstrumentService.isComplete = true;
-            situation.put(fileName,2);//插桩结束
+            situation.put(key,2);//插桩结束
             System.out.println("已完成");
-        }else if(situation.get(fileName)==1) {
+        }else if(situation.get(key)==1) {
             System.out.println("插桩冲突!");
         }
-
     }
+
+//    @Async
+//    public void doInstrumentation(String fileName) throws IOException {
+//        if(!situation.keySet().contains(fileName)){
+//            situation.put(fileName,0);
+//        }
+//        //0未开始，1进行中，2已完成
+//        File file = new File(baseConfig.getInstrumentationPath() + fileName);
+//        if(file.exists()) {
+//            //默认项目不同版本需要在文件名上体现，即同一文件名就是同一个版本
+//            System.out.println("插桩已经完成过，不再进行");
+//            situation.put(fileName,2);
+//            return;
+//        }
+//
+//        if(situation.get(fileName)==0) {
+//            System.out.println("进行中");
+//            situation.put(fileName,1);//开始插桩
+//            //fileName 是类似 “demo.jar”的文件名
+//            String getUploadedFilePath = baseConfig.getUploadedFilePath().substring(1).replace('/', '\\');
+//            String getRunTestProjectPath = baseConfig.getInstrumentationPath().substring(1).replace('/', '\\');
+//            //取得包名，建立文件夹
+//            int index = fileName.lastIndexOf('.');
+//            String sub = fileName.substring(0, index);
+//            mkDirectory(getUploadedFilePath + sub);
+//            //复制jar包到同名文件夹下，并且解压jar包
+//            File dir = new File(getUploadedFilePath + "\\" + sub);
+//            System.out.println("dir" + dir);
+//            String command = "cmd /c " + "copy  " + "\"" + getUploadedFilePath + fileName + "\"  \"" + getUploadedFilePath + sub + "\"";
+//            System.out.println(command);
+//            doCmd(command, dir);
+//            command = "jar -xvf " + fileName;
+//            doCmd(command, dir);
+//            //执行插桩函数
+//            JarFileInput.jarFileInput(getUploadedFilePath + sub, fileName);
+//            //删除同名文件夹下的jar包
+//            command = "cmd /c " + "del  \"" + getUploadedFilePath + sub + "\\" + fileName + "\"";
+//            System.out.println(command);
+//            doCmd(command, dir);
+//            //打包同名文件夹
+//            command = "cmd /c " + "jar cvfm " + fileName + " META-INF\\MANIFEST.MF ./";
+//            System.out.println(command);
+//            doCmd(command, dir);
+//            //将同名文件夹下的jar包复制到指定位置
+//            command = "cmd /c " + "copy  " + "\"" + getUploadedFilePath + sub + "\\" + fileName + "\"  \"" + getRunTestProjectPath + "\"";
+//            System.out.println(command);
+//            doCmd(command, dir);
+//            //删除创建的文件夹
+//            command = "cmd /c " + "rmdir /s/q   " + "\"" + getUploadedFilePath + sub + "\"";
+//            System.out.println(command);
+//            doCmd(command, dir);
+//            ProgramInstrumentService.isComplete = true;
+//            situation.put(fileName,2);//插桩结束
+//            System.out.println("已完成");
+//        }else if(situation.get(fileName)==1) {
+//            System.out.println("插桩冲突!");
+//        }
+//    }
 
     public static void doCmd(String command,File dir) throws IOException {
         StringBuilder sb = new StringBuilder();

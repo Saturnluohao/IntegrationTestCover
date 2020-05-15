@@ -8,10 +8,7 @@ import com.shine.integrationtestcover.service.ProgramInstrumentService;
 import com.shine.integrationtestcover.service.codeParse.MethodVisitor;
 import com.shine.integrationtestcover.service.programInstrument.JarFileInput;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -28,13 +25,19 @@ public class FileParserController {
     @Autowired
     BaseConfig baseConfig;
 
-    @RequestMapping(value = "/relation",method = RequestMethod.GET)
-    public HashMap<String, Object> getInvokeRelationship(@RequestParam String name, @RequestParam String packages, @RequestParam String packagesToCall){
+    //生成调用关系图。prj_name和version为项目名和版本，packages为遍历范围，packagesToCall为生成范围。
+    @GetMapping(value = "/relation")
+    public HashMap<String, Object> getInvokeRelationship(@RequestParam String prj_name, @RequestParam String version,
+                                                         @RequestParam String packages, @RequestParam String packagesToCall){
+//        String prj_name = "project1";
+//        String version = "1.0";
         ParseJarService.packageNames = packages.isEmpty()? new String[]{""}: packages.split("\n");
         MethodVisitor.packageToCallNames = packagesToCall.isEmpty()? new String[]{""}: packagesToCall.split("\n");
         JarFileInput.packageNames = packages.isEmpty()? new String[]{""}: packages.split("\n");
-        graphService.setFilename(name);
-        graphService.setPath(baseConfig.getUploadedFilePath());
+        graphService.setFilename("source.jar");
+        graphService.setPath(baseConfig.getVersionPath(prj_name, version));
+        //graphService.setFilename(name);
+        //graphService.setPath(baseConfig.getUploadedFilePath());
         graphService.initiate();
         ArrayList edges=graphService.getEdges();
         ArrayList<HashMap<String, Object>> vertex=graphService.getVertex();
@@ -46,7 +49,7 @@ public class FileParserController {
         MethodVisitor.classes = new HashSet<>();
         MethodVisitor.methods = new HashMap<>();
         try {
-            programInstrumentService.doInstrumentation(name);
+            programInstrumentService.doInstrumentation(prj_name, version);
         } catch (IOException e) {
             e.printStackTrace();
         }

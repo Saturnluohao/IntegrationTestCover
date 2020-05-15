@@ -38,6 +38,7 @@ public class BaseConfig {
         return this.uploadedFilePath;
     }
 
+    //以下三个路径在 uploadjar 文件夹里
     public String getProjectPath(String prj_name){
         return getUploadedFilePath() + prj_name + '/';
     }
@@ -48,6 +49,15 @@ public class BaseConfig {
 
     public String getDependencyPath(String prj_name, String version){
         return getVersionPath(prj_name,version) + "dependency/";
+    }
+
+    //以下两个路径在 instrumentation 文件夹里
+    public String getInstrumentationProjectPath(String prj_name){
+        return getInstrumentationPath() + prj_name + '/';
+    }
+
+    public String getInstrumentationVersionPath(String prj_name, String version){
+        return getInstrumentationProjectPath(prj_name) + version + '/';
     }
 
     public String getRegressionFilePath() {
