@@ -624,7 +624,7 @@
             generateGraph(){
                 let _this = this
                 this.$nextTick(() => {
-                    getRelationByFileName(this.currentJar, this.form.packages, this.form.packagesCall).then(response => {
+                    getRelationByFileName({prj_name:this.currentProj, version: this.currentJar, ...this.form}).then(response => {
                         _this.relation.nodes = response.nodes
                         _this.relation.links = response.links
                         // _this.adjustForm.allClasses = response.classes
