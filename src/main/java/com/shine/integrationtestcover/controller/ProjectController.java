@@ -33,13 +33,14 @@ public class ProjectController {
     @GetMapping("/createProject")
     ResponseEntity<String> createProject(String prj_name){
         if(prj_name != null) {
-            //在uploadjar文件夹和instrumentation文件夹中创建子文件夹
+            //在uploadjar文件夹、instrumentation文件夹和uploadTestCase文件夹中创建子文件夹
             File file1 = new File(baseConfig.getProjectPath(prj_name));
             File file2 = new File(baseConfig.getInstrumentationProjectPath(prj_name));
-            if (file1.exists() || file2.exists()) { //项目已存在
+            File file3 = new File(baseConfig.getTestCaseProjectPath(prj_name));
+            if (file1.exists() || file2.exists() || file3.exists()) { //项目已存在
                 return ResponseEntity.badRequest().body("该项目已存在！");
             }
-            if (file1.mkdirs() && file2.mkdirs()) {
+            if (file1.mkdirs() && file2.mkdirs() && file3.mkdirs()) {
                 return ResponseEntity.ok().body("创建项目成功");
             }
             return ResponseEntity.status(500).body("创建项目失败！");
@@ -58,6 +59,7 @@ public class ProjectController {
     ResponseEntity<String> deleteProject(String prj_name){
         String project_path1 = baseConfig.getProjectPath(prj_name);
         String project_path2 = baseConfig.getInstrumentationProjectPath(prj_name);
+        String project_path3 = baseConfig.getTestCaseProjectPath(prj_name);
 
         //判断项目是否存在
         File f = new File(project_path1);
@@ -68,6 +70,7 @@ public class ProjectController {
         //删除两个大文件夹
         dirService.deleteDir(project_path1);
         dirService.deleteDir(project_path2);
+        dirService.deleteDir(project_path3);
         //在数据库中删除JarInfo
         jarInfoService.deleteProject(prj_name);
 

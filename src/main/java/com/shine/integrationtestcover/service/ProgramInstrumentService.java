@@ -28,6 +28,27 @@ public class ProgramInstrumentService {
     @Autowired
     BaseConfig baseConfig;
 
+    //构造函数，加载已经插桩过的版本到 situation
+        public ProgramInstrumentService(){
+        String s = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "uploadedTestCase/";
+        File instrumentBaseDirectory = new File(s);//测试用例的根目录
+        if(instrumentBaseDirectory.isDirectory()){
+            File[] projectDirectories = instrumentBaseDirectory.listFiles();//项目文件夹集合
+            for(File projectDirectory : projectDirectories){//遍历每个项目文件夹
+                if(projectDirectory.isDirectory()){
+                    String prj_name = projectDirectory.getName();
+                    File[] versionDirectories = projectDirectory.listFiles();//版本文件夹集合
+                    for(File versionDirectory : versionDirectories){//遍历每个版本文件夹
+                        if(versionDirectory.isDirectory() && versionDirectory.listFiles().length > 0){//版本文件夹不为空，即已插过桩
+                            String version = versionDirectory.getName();
+                            situation.put(new Pair<>(prj_name, version), 2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Async
     public void doInstrumentation(String prj_name, String version) throws IOException {
         String fileName = "source.jar";
@@ -37,7 +58,7 @@ public class ProgramInstrumentService {
         }
         //0未开始，1进行中，2已完成
         //Instrumentation Path:/C:/Users/stone/Desktop/IntegrationTestCover/target/classes/instrumentation/
-        File file = new File(baseConfig.getInstrumentationVersionPath(prj_name, version) + "instrumentation.jar");
+        File file = new File(baseConfig.getInstrumentationVersionPath(prj_name, version) + "source.jar");
         if(file.exists()) {
             //默认项目不同版本需要在文件名上体现，即同一文件名就是同一个版本
             System.out.println("插桩已经完成过，不再进行");

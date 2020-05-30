@@ -62,6 +62,28 @@ public class RunTestService {
 
     //初始化，接收项目名称
 
+//    public void initate(String projectname, boolean needWait) {
+//        System.out.println(projectname+".jar");
+//        if(needWait) {
+//            while (!ProgramInstrumentService.situation.containsKey(projectname + ".jar") || ProgramInstrumentService.situation.get(projectname + ".jar") != 2) {
+//                try {
+//                    System.out.println("why");
+//                    Thread.sleep(50);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//        commonUtils.deleteDir(new File(baseConfig.getRunTestProjectPath(projectname)));
+//        commonUtils.copyDic(baseConfig.getUploadedTestPath(projectname), baseConfig.getRunTestProjectPath(projectname));
+//        commonUtils.copyFile(projectname + ".jar", baseConfig.getInstrumentationPath(), baseConfig.getRunTestProjectPath(projectname));
+//        this.runprocess = new LinkedList();
+//        this.setTestwaypath(baseConfig.getUploadedFilePath().replaceFirst("/", ""));
+//        this.setJarpath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//插桩后的位置
+//        this.setJarname(projectname);
+//        this.setJavafilepath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//测试文件位置
+//    }
+
     public void initate(String projectname, boolean needWait) {
         System.out.println(projectname+".jar");
         if(needWait) {

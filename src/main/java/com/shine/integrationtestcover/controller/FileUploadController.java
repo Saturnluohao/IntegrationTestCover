@@ -73,8 +73,14 @@ public class FileUploadController {
             jarInfoService.insert(jarInfo);
 
             //在 Instrumentation 文件夹中创建版本文件夹
-            File f2 = new File(baseConfig.getInstrumentationProjectPath(jarInfo.getPrj_name()));
+            String s = baseConfig.getInstrumentationVersionPath(jarInfo.getPrj_name(), jarInfo.getVersion());
+            File f2 = new File(s);
             f2.mkdirs();
+
+            //在 uploadTestCase 文件夹中创建版本文件夹
+            s = baseConfig.getTestCaseVersionPath(jarInfo.getPrj_name(), jarInfo.getVersion());
+            File f3 = new File(s);
+            f3.mkdirs();
 
             return ResponseEntity.ok().body("上传成功");
         } catch (FileNotFoundException e) {
@@ -185,10 +191,12 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body("该版本不存在！");
         }
 
-        //删除两个Version文件夹
+        //删除三个Version文件夹
         dirService.deleteDir(version_path);
         String instrument_version_path = baseConfig.getInstrumentationVersionPath(prj_name, version);
         dirService.deleteDir(instrument_version_path);
+        String testCase_version_path = baseConfig.getTestCaseVersionPath(prj_name, version);
+        dirService.deleteDir(testCase_version_path);
         //在数据库中删除JarInfo
         jarInfoService.deleteByPK(prj_name, version);
 

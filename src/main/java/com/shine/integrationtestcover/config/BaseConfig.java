@@ -38,7 +38,9 @@ public class BaseConfig {
         return this.uploadedFilePath;
     }
 
-    //以下三个路径在 uploadjar 文件夹里
+    /*
+     * 以下三个路径在 uploadjar 文件夹里
+     */
     public String getProjectPath(String prj_name){
         return getUploadedFilePath() + prj_name + '/';
     }
@@ -51,7 +53,9 @@ public class BaseConfig {
         return getVersionPath(prj_name,version) + "dependency/";
     }
 
-    //以下两个路径在 instrumentation 文件夹里
+    /*
+     * 以下两个路径在 instrumentation 文件夹里
+     */
     public String getInstrumentationProjectPath(String prj_name){
         return getInstrumentationPath() + prj_name + '/';
     }
@@ -59,6 +63,22 @@ public class BaseConfig {
     public String getInstrumentationVersionPath(String prj_name, String version){
         return getInstrumentationProjectPath(prj_name) + version + '/';
     }
+
+    /*
+     * 以下三个路径在 uploadedTestCase 文件夹里
+     */
+    public String getTestCasePath(){
+        return getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "uploadedTestCase/";
+    }
+
+    public String getTestCaseProjectPath(String prj_name){
+        return getTestCasePath() + prj_name + "/" ;
+    }
+
+    public String getTestCaseVersionPath(String prj_name, String version){
+        return getTestCaseProjectPath(prj_name) + version + '/';
+    }
+
 
     public String getRegressionFilePath() {
         if(this.regressionTestPath.isEmpty()) {
