@@ -34,17 +34,17 @@ public class TestCaseController {
 
     //获得一个java测试文件的所有测试用例的名称
     @RequestMapping(value = "/getMethods", method = RequestMethod.GET)
-    public List<String> getMethods(String projectname, String testcasename) {
-        runTestService.initate(projectname, true);
+    public List<String> getMethods(String projectname, String version, String testcasename) {
+        runTestService.initate(projectname, version,true);
         runTestService.compileJava(testcasename);
         return runTestService.getMethods(testcasename);
     }
 
     @RequestMapping(value = "/runTestCase", method = RequestMethod.GET)
-    public List runTestCase(String projectname, String testcasename, String method)throws Exception {
+    public List runTestCase(String projectname, String version, String testcasename, String method)throws Exception {
         testcasename = testcasename.replace(".java", "");
         projectname = projectname.replace(".jar", "");
-        runTestService.initate(projectname, true);
+        runTestService.initate(projectname, version,true);
         SimpleDateFormat sdf = new SimpleDateFormat();
         sdf.applyPattern("MMddHHmmss");
         Date date = new Date();

@@ -2,6 +2,7 @@ package com.shine.integrationtestcover.service;
 
 import com.shine.integrationtestcover.config.BaseConfig;
 import com.shine.integrationtestcover.utils.CommonUtils;
+import javafx.util.Pair;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -84,10 +85,11 @@ public class RunTestService {
 //        this.setJavafilepath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//测试文件位置
 //    }
 
-    public void initate(String projectname, boolean needWait) {
-        System.out.println(projectname+".jar");
+    public void initate(String prj_name, String version, boolean needWait) {
         if(needWait) {
-            while (!ProgramInstrumentService.situation.containsKey(projectname + ".jar") || ProgramInstrumentService.situation.get(projectname + ".jar") != 2) {
+            Pair<String, String> key = new Pair<>(prj_name, version);
+            //如果待测试版本还没有插桩，那么等待插桩完成
+            while (!ProgramInstrumentService.situation.containsKey(key) || ProgramInstrumentService.situation.get(key) != 2) {
                 try {
                     System.out.println("why");
                     Thread.sleep(50);
@@ -96,14 +98,14 @@ public class RunTestService {
                 }
             }
         }
-        commonUtils.deleteDir(new File(baseConfig.getRunTestProjectPath(projectname)));
-        commonUtils.copyDic(baseConfig.getUploadedTestPath(projectname), baseConfig.getRunTestProjectPath(projectname));
-        commonUtils.copyFile(projectname + ".jar", baseConfig.getInstrumentationPath(), baseConfig.getRunTestProjectPath(projectname));
+        commonUtils.deleteDir(new File(baseConfig.getRunTestVersionPath(prj_name, version)));
+        commonUtils.copyDic(baseConfig.getTestCaseVersionPath(prj_name, version), baseConfig.getRunTestVersionPath(prj_name, version));
+        commonUtils.copyFile("source.jar", baseConfig.getInstrumentationVersionPath(prj_name, version), baseConfig.getRunTestVersionPath(prj_name, version));
         this.runprocess = new LinkedList();
         this.setTestwaypath(baseConfig.getUploadedFilePath().replaceFirst("/", ""));
-        this.setJarpath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//插桩后的位置
-        this.setJarname(projectname);
-        this.setJavafilepath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//测试文件位置
+        this.setJarpath(baseConfig.getRunTestVersionPath(prj_name, version).replaceFirst("/", ""));//插桩后的位置
+        this.setJarname("source");
+        this.setJavafilepath(baseConfig.getRunTestVersionPath(prj_name, version).replaceFirst("/", ""));//测试文件位置
     }
 
     /*

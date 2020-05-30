@@ -173,4 +173,26 @@ public class BaseConfig {
         }
         return runTestPath;
     }
+
+    public String getRunTestVersionPath(String prj_name, String version){
+        String runTestPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "runTestCase/" + prj_name + "/" + version + "/";
+        try{
+            runTestPath = java.net.URLDecoder.decode(runTestPath, "UTF-8");
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+        };
+        File directory=new File(runTestPath);
+        if(!directory.exists())
+        {
+            try{
+                directory.mkdirs();
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return runTestPath;
+    }
 }
