@@ -60,6 +60,7 @@ public class ProjectController {
         String project_path1 = baseConfig.getProjectPath(prj_name);
         String project_path2 = baseConfig.getInstrumentationProjectPath(prj_name);
         String project_path3 = baseConfig.getTestCaseProjectPath(prj_name);
+        String project_path4 = baseConfig.getRunTestProjectPath(prj_name);
 
         //判断项目是否存在
         File f = new File(project_path1);
@@ -67,10 +68,11 @@ public class ProjectController {
             return ResponseEntity.badRequest().body("项目不存在！");
         }
 
-        //删除两个大文件夹
+        //删除四个大文件夹
         dirService.deleteDir(project_path1);
         dirService.deleteDir(project_path2);
         dirService.deleteDir(project_path3);
+        dirService.deleteDir(project_path4);
         //在数据库中删除JarInfo
         jarInfoService.deleteProject(prj_name);
 

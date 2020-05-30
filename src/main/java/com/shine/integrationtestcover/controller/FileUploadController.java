@@ -191,12 +191,14 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body("该版本不存在！");
         }
 
-        //删除三个Version文件夹
+        //删除四个Version文件夹
         dirService.deleteDir(version_path);
         String instrument_version_path = baseConfig.getInstrumentationVersionPath(prj_name, version);
         dirService.deleteDir(instrument_version_path);
         String testCase_version_path = baseConfig.getTestCaseVersionPath(prj_name, version);
         dirService.deleteDir(testCase_version_path);
+        String runTest_version_path = baseConfig.getRunTestVersionPath(prj_name, version);
+        dirService.deleteDir(runTest_version_path);
         //在数据库中删除JarInfo
         jarInfoService.deleteByPK(prj_name, version);
 
