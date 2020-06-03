@@ -3,9 +3,10 @@ package com.shine.integrationtestcover;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-@SpringBootApplication
+@SpringBootApplication()
 @EnableAsync
 @MapperScan("com.shine.integrationtestcover.mapper")
 public class IntegrationTestCoverApplication {

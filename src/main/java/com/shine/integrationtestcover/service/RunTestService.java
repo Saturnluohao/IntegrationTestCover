@@ -12,11 +12,13 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author: WHQ
@@ -60,6 +62,10 @@ public class RunTestService {
     public int getTask() {
         return task;
     }
+
+
+    private String prj_name;
+    private String version;
 
     //初始化，接收项目名称
 
@@ -106,6 +112,9 @@ public class RunTestService {
         this.setJarpath(baseConfig.getRunTestVersionPath(prj_name, version).replaceFirst("/", ""));//插桩后的位置
         this.setJarname("source");
         this.setJavafilepath(baseConfig.getRunTestVersionPath(prj_name, version).replaceFirst("/", ""));//测试文件位置
+
+        this.prj_name = prj_name;
+        this.version = version;
     }
 
     /*
@@ -115,7 +124,9 @@ public class RunTestService {
         String packagename = "";
         try {
             File file = new File(javafilepath + "//" + javafilename + ".java");
-            if (!file.exists()) System.out.println("javafile:" + javafilename + "read package name failed");
+            if (!file.exists()) {
+                System.out.println("javafile:" + javafilename + "read package name failed");
+            }
             BufferedReader br = new BufferedReader(new FileReader(file.getAbsolutePath()));
             packagename = br.readLine();
             br.close();
@@ -194,10 +205,33 @@ public class RunTestService {
         try {
             //String command=
             // "javac -cp C:\Users\22831\Desktop\lib\IntegrationTestCover.jar;C:\Users\22831\Desktop\lib\junit-4.10.jar com\shine\integrationtestcover\service\GraphServiceTest.java";
-            String command = "javac -cp " + jarpath + jarname + ".jar" + ";" + testwaypath + testwayname + ".jar" + " " + javafilepath + packagename + "//" + javafilename + ".java";
+            String command = "javac -cp " +
+                    getClasspath(prj_name, version) +
+                    " -d " + javafilepath +
+                    " " + javafilepath + javafilename + ".java";
             System.out.println(command);
+            if(command.equals("javac -cp C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/runTestCase/bean-query/bean-query.jar;C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/uploadedJar/junit-4.10.jar C:/Users/acer/Documents/GitHub/IntegrationTestCover/target/classes/runTestCase/bean-query/cn//jimmyshi//beanquery//comparators//PropertyComparatorTest.java")){
+                System.out.println("jhjj");
+            }
+
+//            Scanner sc = new Scanner(System.in);
+//            while(true){
+//                try {
+//                    command = sc.nextLine();
+//                    Process process = Runtime.getRuntime().exec(command);
+//                    printLines(command + " stdout:", process.getInputStream());
+//                    printLines(command + " stderr: ", process.getErrorStream());
+//                    process.waitFor();
+//                }catch (Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+
+
             Process process = Runtime.getRuntime().exec(command);
-            process.waitFor();
+            printLines(command + " stdout:", process.getInputStream());
+            printLines(command + " stderr:", process.getErrorStream());
+            process.waitFor(5, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -208,8 +242,9 @@ public class RunTestService {
     获得一个java文件里面的测试用例的方法名字
      */
     public List<String> getMethods(String javafilename) {
-        if (!ifcompiled(javafilename))
+        if (!ifcompiled(javafilename)) {
             compileJava(javafilename);
+        }
         String packagename = getPackagename(javafilename);
         List<String> methods = new LinkedList<>();
         try {
@@ -248,21 +283,23 @@ public class RunTestService {
         finishtask.add(sumtask);
         this.runprocess = finishtask;
         String packagename = getPackagename(javafilename);
-        if (!ifcompiled(javafilename))
+        if (!ifcompiled(javafilename)) {
             compileJava(javafilename);
+        }
         //String packagename="com.example.demo.controller";
         PrintStream old = System.out;
         try {
-            //File file = new File("C://Users//22831//Desktop//lib//demo.jar");
-            File file = new File(this.getJarpath() + "//" + this.getJarname() + ".jar");
-            //URL url = new URL("file:"+jarpath+"//"+jarname);
-            URL url = file.toURI().toURL();
-            //  System.out.println("url" + url);
-            //   URLClassLoader loader= new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
-            // File xFile=new File("C://Users//22831//Desktop");
-            File xFile = new File(this.javafilepath);
-            URL url2 = xFile.toURL();
-            URLClassLoader ClassLoader = new URLClassLoader(new URL[]{url2, url});
+//            //File file = new File("C://Users//22831//Desktop//lib//demo.jar");
+//            File file = new File(this.getJarpath() + "//" + this.getJarname() + ".jar");
+//            //URL url = new URL("file:"+jarpath+"//"+jarname);
+//            URL url = file.toURI().toURL();
+//            //  System.out.println("url" + url);
+//            //   URLClassLoader loader= new URLClassLoader(new URL[] { url }, Thread.currentThread().getContextClassLoader());
+//            // File xFile=new File("C://Users//22831//Desktop");
+//            File xFile = new File(this.javafilepath);
+//            URL url2 = xFile.toURL();
+//            URLClassLoader ClassLoader = new URLClassLoader(new URL[]{url2, url});
+            URLClassLoader ClassLoader = new URLClassLoader(getDependencyList(prj_name,version, javafilepath));
             //Class xClass = ClassLoader.loadClass("com.example.demo.controller.TestMethod");
             Class xClass = ClassLoader.loadClass(packagename + "." + javafilename);
             FileOutputStream bos = new FileOutputStream(this.javafilepath + "//output-" + javafilename + ".txt");
@@ -437,7 +474,7 @@ public class RunTestService {
         while (dirList.size() != 0) {
             File dir = dirList.pop();
             File[] subs = dir.listFiles();
-            if (subs == null) return;
+            if (subs == null) {return;}
             for (File file : subs) {
                 if (file.isFile()) {
                     fileList.add(file);
@@ -533,7 +570,9 @@ public class RunTestService {
         try {
             String filepath = this.javafilepath + "//output-" + javafilename + ".txt";//txt位置
             File file = new File(filepath);
-            if (file == null) System.out.println("txt生成失败!!!");
+            if (file == null) {
+                System.out.println("txt生成失败!!!");
+            }
             InputStreamReader reader = new InputStreamReader(new FileInputStream(file));
             BufferedReader br = new BufferedReader(reader);
             String line;
@@ -579,7 +618,7 @@ public class RunTestService {
 //        System.out.println("java" + javafilename);
 //        System.out.println("path" + path);
         File packagepath = new File(path);
-        if (packagepath.listFiles() == null) return false;
+        if (packagepath.listFiles() == null) {return false;}
         for (File f : Objects.requireNonNull(packagepath.listFiles())) {
             System.out.println("file" + f.getName());
             if (f.getName().equals(javafilename + ".class")) {
@@ -590,6 +629,113 @@ public class RunTestService {
 
 
         return false;
+    }
+
+
+    //根据pom下载依赖
+    public void downloadDependency(String pomPath) {
+        try {
+            String command = "mvn.cmd dependency:copy-dependencies -f " + pomPath;
+            System.out.println(command);
+            Process process = Runtime.getRuntime().exec(command);
+            printLines(command + " stdout:", process.getInputStream());
+            printLines(command + " stderr: ", process.getErrorStream());
+            process.waitFor();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //判断pom文件是否存在
+    boolean isPomExists(String projectName, String version){
+        String pomPath = baseConfig.getDependencyPath(projectName, version) + "/pom.xml";
+        File pomFile = new File(pomPath);
+        if (pomFile.exists()){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    //判断依赖是否已经下载
+    boolean isDependencyDownloaded(String projectName, String version){
+        String denpendencyDir = baseConfig.getDependencyPath(projectName, version) + "/target";
+        File file = new File(denpendencyDir);
+        if (file.exists()){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    //获取类路径
+    public String getClasspath(String projectName, String version){
+        if(isPomExists(projectName, version) && !isDependencyDownloaded(projectName, version)){
+            String dependencyPath = baseConfig.getDependencyPath(projectName, version);
+            if (dependencyPath.startsWith("/")){
+                dependencyPath = dependencyPath.substring(1);
+            }
+            downloadDependency(dependencyPath + "/pom.xml");
+        }
+        StringBuffer sb = new StringBuffer();
+        List<File> dependencyFileList = getDependencyFile(projectName, version);
+        for (File file :
+                dependencyFileList) {
+            sb.append(file.getAbsolutePath());
+            sb.append(";");  //windows使用分号作为类路径分隔符
+        }
+        return sb.toString();
+    }
+
+    //获取所有依赖文件对象
+    List<File> getDependencyFile(String projectName, String version){
+        List<File> dependencyFileList = new ArrayList<>();
+        String depDir = baseConfig.getDependencyPath(projectName, version);
+        File pomDependencyDirFile = new File(depDir + "target/dependency");
+        File commonDependencyDirFile = new File(depDir);
+        dependencyFileList.add(new File(baseConfig.getVersionPath(projectName, version) + "source.jar"));
+        if (pomDependencyDirFile.exists()){
+            for(File file : pomDependencyDirFile.listFiles()){
+                if(file.getName().endsWith(".jar")){
+                    dependencyFileList.add(file);
+                }
+            }
+        }
+        for (File file : commonDependencyDirFile.listFiles()){
+            if(file.getName().endsWith(".jar")){
+                dependencyFileList.add(file);
+            }
+        }
+        return dependencyFileList;
+    }
+
+    //获取所有依赖和测试文件的URL对象列表，以供加载
+    URL[] getDependencyList(String projectName, String version, String testFilePath){
+        File runTestDirFile = new File(baseConfig.getRunTestProjectPath(projectName));
+        List<URL> urlList = new ArrayList<>();
+        try {
+            urlList.add(new File(testFilePath).toURL());
+            for(File file : getDependencyFile(projectName, version)){
+                urlList.add(file.toURL());
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        URL[] urlArray = new URL[urlList.size()];
+        for (int i = 0; i < urlList.size(); i++) {
+            urlArray[i] = urlList.get(i);
+        }
+        return urlArray;
+    }
+
+    //打印命令行的输出
+    private void printLines(String cmd, InputStream ins) throws Exception {
+        String line = null;
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(ins));
+        while ((line = in.readLine()) != null) {
+            System.out.println(cmd + " " + line);
+        }
     }
 
     public String getJarpath() {

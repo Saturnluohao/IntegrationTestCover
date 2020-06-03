@@ -1,6 +1,7 @@
 package com.shine.integrationtestcover.domain;
 
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -17,6 +18,7 @@ public class JarInfo {
     private String prj_name;
     private String version;
     private String author;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date time;
     private String description;
 }

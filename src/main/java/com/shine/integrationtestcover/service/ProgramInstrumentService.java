@@ -30,7 +30,7 @@ public class ProgramInstrumentService {
 
     //构造函数，加载已经插桩过的版本到 situation
         public ProgramInstrumentService(){
-        String s = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "uploadedTestCase/";
+        String s = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "instrumentation/";
         File instrumentBaseDirectory = new File(s);//测试用例的根目录
         if(instrumentBaseDirectory.isDirectory()){
             File[] projectDirectories = instrumentBaseDirectory.listFiles();//项目文件夹集合
