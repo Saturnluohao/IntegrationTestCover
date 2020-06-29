@@ -21,10 +21,11 @@ export function getRelationByFileName(data) {
     })
 }
 
-export function getTestCaseList() {
+export function getTestCaseList(data) {
     return fetch({
         url: '/apiurl/testCaseList',
-        method: 'get'
+        method: 'get',
+        params: data
     })
 }
 
