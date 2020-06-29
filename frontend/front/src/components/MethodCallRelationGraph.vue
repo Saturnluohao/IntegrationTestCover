@@ -42,7 +42,6 @@
                                 <el-option
                                         v-for="(item,idx) in projectList"
                                         :key="idx"
-                                        :label="item"
                                         :value="item">
                                         <span >{{ item }}</span>
                                         <i style="position:absolute; right: 10px; top: 10px" class="el-icon-delete" title="删除此项目" @click.stop="deleteProj(idx)"></i>
@@ -59,7 +58,6 @@
                                 <el-option
                                         v-for="(item,idx) in uploadedFiles"
                                         :key="idx"
-                                        :label="idx"
                                         :value="item.version">
                                         <el-popover
                                             placement="right"
@@ -191,7 +189,7 @@
                             <el-container>
                                 <el-form ref="selectTestForm" :model="selectTestForm" label-width="80px">
                                     <el-dialog title="上传新的测试用例" :visible.sync="openNewTestModal" width="350px">
-                                        <el-upload class="upload" action="/apiurl/uploadTestCase" accept=".zip,.java" :before-upload="onBeforeUploadTestCase" ref="uploadTest" :on-success="uploadTestCaseSuccess" :auto-upload="false" :data="{selectedProject:currentJar}">
+                                        <el-upload class="upload" action="/apiurl/uploadTestCase" accept=".zip,.java" :before-upload="onBeforeUploadTestCase" ref="uploadTest" :on-success="uploadTestCaseSuccess" :auto-upload="false" :data="{selectedProject:currentProj, version: currentJar}">
                                             <el-button slot="trigger" type="primary">选取文件</el-button>
                                             <el-button style="margin-left: 10px;" type="success" @click="submitTestUpload">上传到服务器</el-button>
                                             <div slot="tip" class="el-upload__tip">只能上传java文件或者zip文件</div>
@@ -399,6 +397,7 @@
     import { Promise } from 'q';
     import * as rrweb from "rrweb";
     import Player from '@/components/Player.vue';
+import { EOVERFLOW } from 'constants';
 
     export default {
         components: {
@@ -606,6 +605,17 @@
                             this.getRegressionProj(this.currentJar);
                         })
                     })
+                    _this.uploadedFiles=[{
+                        version: '1.0',
+                        author: 'Jiang',
+                        time: '2020-07-11',
+                        description: 'Fucking'
+                    },{
+                        version: '3.0',
+                        author: 'Pi',
+                        time: '2020-07-12',
+                        description: 'Shit'
+                    }]
                 }
             },
             packagesHistory(queryString, cb) {
@@ -645,6 +655,7 @@
                         }
                     })
                     // 保存历史记录
+                    console.log(123)
                     if (this.history.packagesCall.filter(item => item.value == this.form.packagesCall).length == 0) {
                         this.history.packagesCall.push({"value":this.form.packagesCall})
                     }
