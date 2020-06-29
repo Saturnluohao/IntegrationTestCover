@@ -204,7 +204,9 @@ public class TestUploadController {
     @ResponseBody
     public HashMap<String, Object> getTestCaseList(String prj_name){
         HashMap<String, HashMap<String, List<String>>> projectToTestFiles = new HashMap<>();
-        File uploadedProjectDirectory = new File(baseConfig.getTestCaseProjectPath(prj_name));//uploadedProjectDirectory 为 prj_name 项目文件夹
+        String prj_dir = baseConfig.getTestCaseProjectPath(prj_name);
+        prj_dir = prj_dir.substring(0,prj_dir.length()-1);
+        File uploadedProjectDirectory = new File(prj_dir);//uploadedProjectDirectory 为 prj_name 项目文件夹
         if(uploadedProjectDirectory.isDirectory()) {
             File[] projectDirectorys = uploadedProjectDirectory.listFiles();//projectDirectorys 为 prj_name 项目的各个版本文件夹
             for (File projectDirectory : projectDirectorys) {//遍历每一个版本文件夹
