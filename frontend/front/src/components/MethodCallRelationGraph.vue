@@ -292,28 +292,9 @@
                     <el-collapse-item class="titlestyle" title="回归测试" name="regression">
                     <el-card :body-style="{ padding: '0px 5px' }" class="card">
                         <!-- 考虑 添加 自动 补全 -->
-                        <el-input
-                            type="textarea"
-                            autosize
-                            placeholder="请输入包范围"
-                            v-model="regression.info.packageName">
-                        </el-input>
-                        <!-- action="https://jsonplaceholder.typicode.com/posts/" -->
-                        <el-upload
-                            style="margin:10px 0;height:100px"
-                            ref="uploadjar"
-                            action="/apiurl/uploadRegressiveJar"
-                            :file-list="regression.jarFiles"
-                            :on-change="fileListChange"
-                            :on-remove="fileListChange"
-                            :on-success="uploadSucc"
-                            :limit="1"
-                            :disabled="regression.disable"
-                            :auto-upload="false">
-                            <el-button slot="trigger" size="small" type="primary" :disabled="regression.disable">{{regression.status}}</el-button>
-                            <el-button style="margin-left: 10px;" size="small" type="success" @click="UploadJars"  :disabled="!regression.info.newJarName || !currentJar">上传</el-button>
-                            <div slot="tip" class="el-upload__tip">请上传新版本的Jar包</div>
-                        </el-upload>
+                        <el-autocomplete class="inline-input" v-model="form.packages" :fetch-suggestions="packagesHistory"
+                            placeholder="请输入遍历包范围"
+                        ></el-autocomplete>
                     </el-card>
                     <el-row :gutter="20" style="margin:10px 0">
                         <el-col :span="18" style="padding:0;text-align:left">
@@ -467,6 +448,7 @@ import { EOVERFLOW } from 'constants';
                     oldcases:{},             // 所有的测试用例
                     chosedInfo:"",
                 },
+                regressionPackage: '',
                 oldvsnew:[],          // 用于新旧版本项目测试用例的对比
                 filterList:["remain", "affected"],    // 过滤回归测试结果测试用例
                 events:[],            // 脚本录制,

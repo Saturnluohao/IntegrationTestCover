@@ -14,7 +14,7 @@ export default new Router({
     base: process.env.BASE_URL,
     routes: [
         {
-            path: '/',
+            path: '/method',
             name: 'demo',
             component: D3Demo
         },
@@ -29,7 +29,7 @@ export default new Router({
             component: Recorder
         },
         {
-            path: '/method',
+            path: '/',
             name: 'MethodCallRelationGraph',
             component: MethodCallRelationGraph
         },
