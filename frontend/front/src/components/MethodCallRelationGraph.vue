@@ -355,19 +355,6 @@
                     </el-collapse>
                     </el-card>
                 </el-collapse-item>
-
-                <el-collapse-item class="titlestyle" title="脚本录制" name="9">
-                    <!-- 选择框，选择要回放的测试用例 -->
-                    <el-button size="small" type="primary" @click="watchReplay">查看回放</el-button>
-                    <el-dialog
-                        :visible.sync="showReplay"
-                        width="60%">
-                        <Player ref="replayer"/>
-                        <span slot="footer" class="dialog-footer">
-                            <el-button type="primary" @click="toggleReplay">{{playandpause}}</el-button>
-                        </span>
-                    </el-dialog>
-                </el-collapse-item>
             </el-collapse>
         </div>
     </el-container>
