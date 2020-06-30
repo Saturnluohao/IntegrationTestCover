@@ -106,7 +106,7 @@ public class RunTestService {
         }
         commonUtils.deleteDir(new File(baseConfig.getRunTestVersionPath(prj_name, version)));
         commonUtils.copyDic(baseConfig.getTestCaseVersionPath(prj_name, version), baseConfig.getRunTestVersionPath(prj_name, version));
-        commonUtils.copyFile("source.jar", baseConfig.getInstrumentationVersionPath(prj_name, version), baseConfig.getRunTestVersionPath(prj_name, version));
+//        commonUtils.copyFile("source.jar", baseConfig.getInstrumentationVersionPath(prj_name, version), baseConfig.getRunTestVersionPath(prj_name, version));
         this.runprocess = new LinkedList();
         this.setTestwaypath(baseConfig.getUploadedFilePath().replaceFirst("/", ""));
         this.setJarpath(baseConfig.getRunTestVersionPath(prj_name, version).replaceFirst("/", ""));//插桩后的位置
@@ -308,6 +308,7 @@ public class RunTestService {
             Method xMethod = xClass.getDeclaredMethod(methodname);
             xMethod.setAccessible(true);
             xMethod.invoke(xClass.newInstance());
+            bos.close();
 
         } catch (ClassNotFoundException e) {
             System.out.println(javafilename + "编译失败！！！");
@@ -693,7 +694,7 @@ public class RunTestService {
         String depDir = baseConfig.getDependencyPath(projectName, version);
         File pomDependencyDirFile = new File(depDir + "target/dependency");
         File commonDependencyDirFile = new File(depDir);
-        dependencyFileList.add(new File(baseConfig.getVersionPath(projectName, version) + "source.jar"));
+        dependencyFileList.add(new File(baseConfig.getInstrumentationVersionPath(projectName, version) + "source.jar"));
         if (pomDependencyDirFile.exists()){
             for(File file : pomDependencyDirFile.listFiles()){
                 if(file.getName().endsWith(".jar")){
