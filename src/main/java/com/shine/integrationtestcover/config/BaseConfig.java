@@ -1,5 +1,6 @@
 package com.shine.integrationtestcover.config;
 
+import com.shine.integrationtestcover.IntegrationTestCoverApplication;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -13,10 +14,24 @@ public class BaseConfig {
     private String uploadedFilePath = "";
     private String instrumentationPath = "";
     private String regressionTestPath = "";
+    private String Root;
+
+    public BaseConfig(){
+        String path = IntegrationTestCoverApplication.class.getProtectionDomain().getCodeSource().getLocation().getFile();
+        Root = "/" + new File(path).getParentFile().getAbsolutePath().replace("\\\\", "/") + "/";
+
+        int sep = Root.lastIndexOf("\\file:");
+        int sep_linux = Root.lastIndexOf("/file");
+        if(sep >= 0 && sep < Root.length()){
+            Root = Root.substring(0, sep) + "/";
+        }else if(sep_linux >= 0 && sep_linux < Root.length()){
+            Root = Root.substring(0, sep_linux) + "/";
+        }
+    }
 
     public String getUploadedFilePath() {
         if(this.uploadedFilePath.isEmpty()) {
-            this.uploadedFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "uploadedJar/";
+            this.uploadedFilePath = Root+ "uploadedJar/";
             try{
                 this.uploadedFilePath = java.net.URLDecoder.decode(this.uploadedFilePath, "UTF-8");
             }catch(Exception e)
@@ -68,7 +83,7 @@ public class BaseConfig {
      * 以下三个路径在 uploadedTestCase 文件夹里
      */
     public String getTestCasePath(){
-        return getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "uploadedTestCase/";
+        return Root+ "uploadedTestCase/";
     }
 
     public String getTestCaseProjectPath(String prj_name){
@@ -82,7 +97,7 @@ public class BaseConfig {
 
     public String getRegressionFilePath() {
         if(this.regressionTestPath.isEmpty()) {
-            this.regressionTestPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "regressionTest/";
+            this.regressionTestPath = Root+ "regressionTest/";
             try{
                 this.regressionTestPath = java.net.URLDecoder.decode(this.regressionTestPath, "UTF-8");
             }catch(Exception e)
@@ -106,7 +121,7 @@ public class BaseConfig {
 
     public String getInstrumentationPath() {
         if(this.instrumentationPath.isEmpty()) {
-            this.instrumentationPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "instrumentation/";
+            this.instrumentationPath = Root+ "instrumentation/";
             try{
                 this.instrumentationPath = java.net.URLDecoder.decode(this.instrumentationPath, "UTF-8");
             }catch(Exception e)
@@ -130,7 +145,7 @@ public class BaseConfig {
 
     public String getUploadedTestPath(String projectName) {
         String newname=projectName.replace(".jar","");
-        String uploadedTestPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "uploadedTestCase/" + newname + "/" ;
+        String uploadedTestPath = Root+ "uploadedTestCase/" + newname + "/" ;
         try{
             uploadedTestPath = java.net.URLDecoder.decode(uploadedTestPath, "UTF-8");
         }catch(Exception e)
@@ -153,7 +168,7 @@ public class BaseConfig {
 
     public String getRunTestProjectPath(String projectName) {
         String newname = projectName.replace(".jar","");
-        String runTestPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "runTestCase/" + newname + "/" ;
+        String runTestPath = Root+ "runTestCase/" + newname + "/" ;
         try{
             runTestPath = java.net.URLDecoder.decode(runTestPath, "UTF-8");
         }catch(Exception e)
@@ -175,7 +190,7 @@ public class BaseConfig {
     }
 
     public String getRunTestVersionPath(String prj_name, String version){
-        String runTestPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile()+ "runTestCase/" + prj_name + "/" + version + "/";
+        String runTestPath = Root + "runTestCase/" + prj_name + "/" + version + "/";
         try{
             runTestPath = java.net.URLDecoder.decode(runTestPath, "UTF-8");
         }catch(Exception e)

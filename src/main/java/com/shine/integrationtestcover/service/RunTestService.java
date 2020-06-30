@@ -231,7 +231,6 @@ public class RunTestService {
             Process process = Runtime.getRuntime().exec(command);
             printLines(command + " stdout:", process.getInputStream());
             printLines(command + " stderr:", process.getErrorStream());
-            process.waitFor(5, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }
