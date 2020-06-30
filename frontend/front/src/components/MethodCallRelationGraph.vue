@@ -744,8 +744,8 @@ import { EOVERFLOW } from 'constants';
                 this.showTestClass()
             },
             showTestClass(){
-                if(this.testCaseMap[this.version])
-                    this.selectTestForm.allTestClasses = Object.keys(this.testCaseMap[this.version]);
+                if(this.testCaseMap[this.currentJar])
+                    this.selectTestForm.allTestClasses = Object.keys(this.testCaseMap[this.currentJar]);
                 else{
                     this.selectTestForm.allTestClasses = [];
                     this.selectTestForm.allTestCases = [];
@@ -754,7 +754,7 @@ import { EOVERFLOW } from 'constants';
             getTestClass(prov) {
                 console.log(prov)
                 this.selectTestForm.selectedTestCase = '';
-                this.selectTestForm.allTestCases =  this.testCaseMap[this.version][prov]
+                this.selectTestForm.allTestCases =  this.testCaseMap[this.currentJar][prov]
             },
             startRunTestCase(file) {
                 this.uncoverfullname=[];
