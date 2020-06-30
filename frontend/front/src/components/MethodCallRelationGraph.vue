@@ -770,7 +770,7 @@ import { EOVERFLOW } from 'constants';
                 }
                 let _this = this;
                 // 传参数给后端跑测试用例
-                runTestCase(projectname, testcasename, method).then(response => {// response 为 ["12123123","many"]
+                runTestCase(projectname, version, testcasename, method).then(response => {// response 为 ["12123123","many"]
                     if(response[2]) return; // error msg
                     _this.taskId = response[0];
                     _this.taskType = response[1];
