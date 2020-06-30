@@ -4,8 +4,8 @@ spring:
       max-file-size: 100MB
       max-request-size: 1000MB
   datasource:
-    url: jdbc:mysql://localhost:3306/integration_test?serverTimezone=UTC
+    url: jdbc:mysql://118.25.191.207:3306/integration_test?serverTimezone=UTC
     username: root
-#    password: QAZxsw741258
-    password: 2529428523
+    password: QAZxsw741258
+#    password: 2529428523
     driver-class-name: com.mysql.cj.jdbc.Driver

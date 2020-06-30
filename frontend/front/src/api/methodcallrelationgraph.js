@@ -29,14 +29,15 @@ export function getTestCaseList(data) {
     })
 }
 
-export function runTestCase(projectname, testcasename, method) {
+export function runTestCase(projectname, version,  testcasename, method) {
     return fetch({
         url: '/apiurl/runTestCase',
         method: 'get',
         params: {
-            projectname: projectname,
-            testcasename: testcasename,
-            method: method
+            projectname,
+            testcasename,
+            method,
+            version
         }
     })
 }

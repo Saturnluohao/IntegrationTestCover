@@ -756,12 +756,13 @@ import { EOVERFLOW } from 'constants';
                 this.selectTestForm.selectedTestCase = '';
                 this.selectTestForm.allTestCases =  this.testCaseMap[this.currentJar][prov]
             },
-            startRunTestCase(file) {
+            startRunTestCase() {
                 this.uncoverfullname=[];
                 if(this.TestResult!=null){
                     this.cancelShow(this.TestResult);
                 }
-                var projectname  = this.currentJar;
+                var projectname  = this.currentProj;
+                var version = this.currentJar;
                 var testcasename = this.selectTestForm.selectedTestClass;
                 var method       = this.selectTestForm.selectedTestCase;
                 if(!projectname || !testcasename || (testcasename != 'allTestFiles' && !method)){
