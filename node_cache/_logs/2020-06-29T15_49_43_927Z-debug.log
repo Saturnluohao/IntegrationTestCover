@@ -1,0 +1,23 @@
+0 info it worked if it ends with ok
+1 verbose cli [
+1 verbose cli   'C:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'run',
+1 verbose cli   'serve'
+1 verbose cli ]
+2 info using npm@6.12.0
+3 info using node@v12.13.0
+4 verbose config Skipping project config: C:\Users\stone/.npmrc. (matches userconfig)
+5 verbose stack Error: ENOENT: no such file or directory, open 'C:\Users\stone\package.json'
+6 verbose cwd C:\Users\stone\Desktop\IntegrationTestCover
+7 verbose Windows_NT 10.0.17763
+8 verbose argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "run" "serve"
+9 verbose node v12.13.0
+10 verbose npm  v6.12.0
+11 error code ENOENT
+12 error syscall open
+13 error path C:\Users\stone\package.json
+14 error errno -4058
+15 error enoent ENOENT: no such file or directory, open 'C:\Users\stone\package.json'
+16 error enoent This is related to npm not being able to find a file.
+17 verbose exit [ -4058, true ]

@@ -537,12 +537,15 @@ public class RunTestService {
         }
     }
 
-    public HashMap<String, List<String>> regressionCompare(String projectname) throws Exception {
+    public HashMap<String, List<String>> regressionCompare(String prj_name, String oldVersion) throws Exception {
         System.out.println("reCompare");
         HashMap<String, List<String>> compare = new HashMap<>();
-        this.setJarpath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//插桩后的位置
-        this.setJarname(projectname);
-        this.setJavafilepath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//测试文件位置
+//        this.setJarpath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//插桩后的位置
+        this.setJarpath(baseConfig.getRunTestVersionPath(prj_name, oldVersion).replaceFirst("/", ""));
+//        this.setJarname(projectname);
+        this.setJarname("source.jar");
+//        this.setJavafilepath(baseConfig.getRunTestProjectPath(projectname).replaceFirst("/", ""));//测试文件位置
+        this.setJavafilepath(baseConfig.getRunTestVersionPath(prj_name, oldVersion).replaceFirst("/", ""));
         String path = this.javafilepath;
         File file = new File(path);
         List<File> tempList = getAllTestFileFromDic(file);
