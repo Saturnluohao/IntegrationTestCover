@@ -605,17 +605,6 @@ import { EOVERFLOW } from 'constants';
                             this.getRegressionProj(this.currentJar);
                         })
                     })
-                    _this.uploadedFiles=[{
-                        version: '1.0',
-                        author: 'Jiang',
-                        time: '2020-07-11',
-                        description: 'Fucking'
-                    },{
-                        version: '3.0',
-                        author: 'Pi',
-                        time: '2020-07-12',
-                        description: 'Shit'
-                    }]
                 }
             },
             packagesHistory(queryString, cb) {
@@ -751,13 +740,12 @@ import { EOVERFLOW } from 'constants';
                 this.selectTestForm.selectedTestCase = '';
                 this.selectTestForm.selectedTestClass = '';
                 this.uncoverfullname=[];
-                var prjName = prov.split('.')[0];
                 // prov is "demo.jar" but testCaseMap is {"demo":{...}}
-                this.showTestClass(prjName)
+                this.showTestClass()
             },
-            showTestClass(prjName){
-                if(this.testCaseMap[prjName])
-                    this.selectTestForm.allTestClasses = Object.keys(this.testCaseMap[prjName]);
+            showTestClass(){
+                if(this.testCaseMap[this.version])
+                    this.selectTestForm.allTestClasses = Object.keys(this.testCaseMap[this.version]);
                 else{
                     this.selectTestForm.allTestClasses = [];
                     this.selectTestForm.allTestCases = [];
@@ -766,7 +754,7 @@ import { EOVERFLOW } from 'constants';
             getTestClass(prov) {
                 console.log(prov)
                 this.selectTestForm.selectedTestCase = '';
-                this.selectTestForm.allTestCases =  this.testCaseMap[this.currentJar.split('.')[0]][prov]
+                this.selectTestForm.allTestCases =  this.testCaseMap[this.version][prov]
             },
             startRunTestCase(file) {
                 this.uncoverfullname=[];
@@ -819,10 +807,10 @@ import { EOVERFLOW } from 'constants';
                         //this.usecasenum=this.testCaseMap[this.selectedTestProject].length;
                          var sum=0;
                          console.log(_this.testCaseMap)
-                         console.log(_this.currentJar.split('.')[0])
-                         for(let index in _this.testCaseMap[_this.currentJar.split('.')[0]])
+                         console.log(_this.currentJar)
+                         for(let index in _this.testCaseMap[_this.currentJar])
                          {
-                                sum+=_this.testCaseMap[_this.currentJar.split('.')[0]][index].length;
+                                sum+=_this.testCaseMap[_this.currentJar][index].length;
                          }
                         console.log(_this.usecasenum)
                          _this.usecasenum  =sum;
@@ -831,7 +819,7 @@ import { EOVERFLOW } from 'constants';
                     {
                         if(_this.selectTestForm.selectedTestCase == "allMethods")
                         {
-                             _this.usecasenum = _this.testCaseMap[_this.currentJar.split('.')[0]][_this.selectTestForm.selectedTestClass].length;
+                             _this.usecasenum = _this.testCaseMap[_this.currentJar][_this.selectTestForm.selectedTestClass].length;
                         } else {
                             _this.usecasenum = 1;
                         }
