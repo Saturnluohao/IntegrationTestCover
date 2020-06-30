@@ -30,12 +30,14 @@ public class RegressionTestService {
     public List<String> newNodeKey = new ArrayList<>();
     public List<String> deleteNodeKey = new ArrayList<>();
 
-    public void initNodeMap(String oldJarName,String newJarName,String packageName){
+    public void initNodeMap(String prj_name, String oldVersion, String newVersion, String packageName){
         BaseConfig baseConfig = new BaseConfig();
-        PaserJar paserJar = new PaserJar(baseConfig.getRegressionFilePath(), oldJarName, oldGraph);
+        //PaserJar paserJar = new PaserJar(baseConfig.getRegressionFilePath(), oldJarName, oldGraph);
+        PaserJar paserJar = new PaserJar(baseConfig.getVersionPath(prj_name, oldVersion), "source.jar", oldGraph);
         paserJar.setPackageName(packageName);
         oldGraph = paserJar.getInvoking();
-        PaserJar paserJarNew = new PaserJar(baseConfig.getRegressionFilePath(), newJarName, newGraph);
+        //PaserJar paserJarNew = new PaserJar(baseConfig.getRegressionFilePath(), newJarName, newGraph);
+        PaserJar paserJarNew = new PaserJar(baseConfig.getVersionPath(prj_name, newVersion), "source.jar", newGraph);
         paserJarNew.setPackageName(packageName);
         newGraph = paserJarNew.getInvoking();
 
@@ -91,8 +93,8 @@ public class RegressionTestService {
         }
     }
 
-    public void getDangerousInfo(String oldJarName,String newJarName,String packageName) {
-        initNodeMap(oldJarName, newJarName, packageName);
+    public void getDangerousInfo(String prj_name, String oldVersion, String newVersion,String packageName) {
+        initNodeMap(prj_name, oldVersion, newVersion, packageName);
         for (Map.Entry<String, Node> entry : newGraph.getNodeMap().entrySet()){
             if(!visitedList.contains(entry.getKey())) {
                 String key = entry.getKey();
@@ -120,8 +122,8 @@ public class RegressionTestService {
         }
     }
 
-    public List<String> regressiontest(String oldJarName,String newJarName,String packageName) throws Exception {
-        getDangerousInfo(oldJarName, newJarName, packageName);
+    public List<String> regressiontest(String prj_name, String oldVersion,String newVersion,String packageName) throws Exception {
+        getDangerousInfo(prj_name, oldVersion, newVersion, packageName);
         List<String> result=new ArrayList<String>();
         System.out.println("dangerous edge");
         for(int i=0;i<dangerousList.size();i++){
@@ -142,9 +144,10 @@ public class RegressionTestService {
         System.out.println("regressiveTest");
 //        HashMap<String,List<String>> TestMap = runTestService.regressionCompare(oldJarName.split("\\.")[0]);
         HashMap<String,List<String>> TestMap=new HashMap<String,List<String>>();
-        System.out.println(oldJarName.split("\\.")[0]);
+//        System.out.println(oldJarName.split("\\.")[0]);
         try{
-            TestMap = runTestService.regressionCompare(oldJarName.split("\\.")[0]);
+            //TestMap = runTestService.regressionCompare(oldJarName.split("\\.")[0]);
+            TestMap = runTestService.regressionCompare(prj_name, oldVersion);
         }
         catch (Exception e){
             e.printStackTrace();

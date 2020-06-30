@@ -77,7 +77,8 @@ public class PaserJar {
                 JarEntry entry;
                 while ((entry = in.getNextJarEntry()) != null) {
                     String name = entry.getName();
-                    if (!name.startsWith(packageName)) continue;
+//                    if (!name.startsWith(packageName)) continue;
+                    if (!name.startsWith(packageName.replace('.','/'))) continue;
                     if (!name.endsWith(".class")) continue;
                     ClassNode classNode = new ClassNode();
                     ClassReader reader = new ClassReader(in);
