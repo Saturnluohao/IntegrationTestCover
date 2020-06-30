@@ -229,8 +229,8 @@ public class RunTestService {
 
 
             Process process = Runtime.getRuntime().exec(command);
-            printLines(command + " stdout:", process.getInputStream());
-            printLines(command + " stderr:", process.getErrorStream());
+//            printLines(command + " stdout:", process.getInputStream());
+//            printLines(command + " stderr:", process.getErrorStream());
         } catch (Exception e) {
             e.printStackTrace();
         }
