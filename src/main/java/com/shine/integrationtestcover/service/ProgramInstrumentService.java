@@ -51,7 +51,6 @@ public class ProgramInstrumentService {
         }
     }
 
-    @Async
     public void doInstrumentation(String prj_name, String version) throws IOException {
         String fileName = "source.jar";
         Pair<String,String> key = new Pair<>(prj_name, version);
