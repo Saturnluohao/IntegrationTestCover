@@ -204,37 +204,29 @@ public class TestUploadController {
     @ResponseBody
     public HashMap<String, Object> getTestCaseList(String prj_name, String version){
         HashMap<String, HashMap<String, List<String>>> projectToTestFiles = new HashMap<>();
-        String prj_dir = baseConfig.getTestCaseProjectPath(prj_name);
+        String prj_dir = baseConfig.getTestCaseVersionPath(prj_name, version);
         prj_dir = prj_dir.substring(0,prj_dir.length()-1);
-        File uploadedProjectDirectory = new File(prj_dir);//uploadedProjectDirectory 为 prj_name 项目文件夹
-        if(uploadedProjectDirectory.isDirectory()) {
-            File[] projectDirectorys = uploadedProjectDirectory.listFiles();//projectDirectorys 为 prj_name 项目的各个版本文件夹
-            for (File projectDirectory : projectDirectorys) {//遍历每一个版本文件夹
-                //String version = projectDirectory.getName();
-                if(!projectDirectory.getName().equals(version))
-                    continue;
-                if(projectDirectory.isDirectory() && projectDirectory.listFiles().length > 0 && ProgramInstrumentService.situation.containsKey(new Pair<>(prj_name, version))) {
-                    projectToTestFiles.put(projectDirectory.getName(), new HashMap<>());
-                    File[] testFiles = projectDirectory.listFiles();//版本文件夹中的文件集合
-                    /*
-                    * 下面这个步骤有问题，还要继续改！
-                    * */
-                    runTestService.initate(prj_name, version, true);
-                    for(File testFile : testFiles) {
-                        if (!testFile.isDirectory()) {
-                            if (testFile.getName().contains(".java")) {
-                                List<String> methods = new ArrayList<>();
-                                //wait for compile file and get test methods
-                                System.out.println(testFile.getName());
-                                methods = runTestService.getMethods(testFile.getName().replace(".java", ""));
-                                methods.add("allMethods");
-                                projectToTestFiles.get(projectDirectory.getName()).put(testFile.getName(), methods);
-                            }
-                        }
+        File projectDirectory = new File(prj_dir);//uploadedProjectDirectory 为 prj_name 项目文件夹
+        if(projectDirectory.isDirectory() && projectDirectory.listFiles().length > 0 && ProgramInstrumentService.situation.containsKey(new Pair<>(prj_name, version))) {
+            projectToTestFiles.put(projectDirectory.getName(), new HashMap<>());
+            File[] testFiles = projectDirectory.listFiles();//版本文件夹中的文件集合
+            /*
+             * 下面这个步骤有问题，还要继续改！
+             * */
+            runTestService.initate(prj_name, version, true);
+            for(File testFile : testFiles) {
+                if (!testFile.isDirectory()) {
+                    if (testFile.getName().contains(".java")) {
+                        List<String> methods = new ArrayList<>();
+                        //wait for compile file and get test methods
+                        System.out.println(testFile.getName());
+                        methods = runTestService.getMethods(testFile.getName().replace(".java", ""));
+                        methods.add("allMethods");
+                        projectToTestFiles.get(projectDirectory.getName()).put(testFile.getName(), methods);
                     }
-                    projectToTestFiles.get(projectDirectory.getName()).put("allTestFiles", Arrays.asList("allMethods"));
                 }
             }
+            projectToTestFiles.get(projectDirectory.getName()).put("allTestFiles", Arrays.asList("allMethods"));
         }
         HashMap<String, Object> result = new HashMap<>();
         result.put("result", projectToTestFiles);
