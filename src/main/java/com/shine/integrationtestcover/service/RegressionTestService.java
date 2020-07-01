@@ -31,6 +31,9 @@ public class RegressionTestService {
     public List<String> deleteNodeKey = new ArrayList<>();
 
     public void initNodeMap(String prj_name, String oldVersion, String newVersion, String packageName){
+        newGraph = new Graph();
+        oldGraph = new Graph();
+
         BaseConfig baseConfig = new BaseConfig();
         //PaserJar paserJar = new PaserJar(baseConfig.getRegressionFilePath(), oldJarName, oldGraph);
         PaserJar paserJar = new PaserJar(baseConfig.getVersionPath(prj_name, oldVersion), "source.jar", oldGraph);
