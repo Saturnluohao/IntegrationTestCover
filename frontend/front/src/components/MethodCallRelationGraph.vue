@@ -110,7 +110,7 @@
                         </el-container>
                         <el-button type="success" @click="newProject" round>上传到服务器</el-button>
                         <el-divider content-position="left">可选</el-divider>
-                            <el-upload class="upload" action="/" accept="application/jar" ref="uploadDep" :auto-upload="false">
+                            <el-upload class="upload" action="/" accept="application/jar" ref="uploadDep" :auto-upload="false" multiple>
                                 <el-button slot="trigger" icon="el-icon-upload2" circle></el-button>
                                 <div slot="tip" class="el-upload__tip inline-tip">上传相关的依赖文件</div>
                             </el-upload>
@@ -1105,6 +1105,7 @@ import { EOVERFLOW } from 'constants';
                 else
                     this.history.regressionInfos = [option];
                 localStorage.setItem('history',JSON.stringify(this.history));
+                this.getRegressionProj(this.currentJar)
                 // 自动获取分析结果
                 this.analyseJars(option);
             },
