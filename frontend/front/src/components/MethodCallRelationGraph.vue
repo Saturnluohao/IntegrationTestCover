@@ -292,9 +292,38 @@
                     <el-collapse-item class="titlestyle" title="回归测试" name="regression">
                     <el-card :body-style="{ padding: '0px 5px' }" class="card">
                         <!-- 考虑 添加 自动 补全 -->
-                        <el-autocomplete class="inline-input" v-model="form.packages" :fetch-suggestions="packagesHistory"
-                            placeholder="请输入遍历包范围"
-                        ></el-autocomplete>
+                        <el-container class="formbody">
+                            <el-form ref="form" :model="selectTestForm" label-width="80px">
+                                <el-form-item label="遍历范围">
+                                <el-autocomplete class="inline-input" v-model="regression.info.packageName" :fetch-suggestions="packagesHistory"
+                                    placeholder="请输入遍历包范围"
+                                ></el-autocomplete>
+                                </el-form-item>
+                                <el-form-item label="新版本">
+                                    <el-select v-model="regression.info.newVersion" placeholder="选择要回归的新版本" @visible-change="showfilelist" @change="newJarChosen">
+                                        <el-option
+                                                v-for="(item,idx) in filteredFiles()"
+                                                :key="idx"
+                                                :value="item.version">
+                                                <el-popover
+                                                    placement="right"
+                                                    :title="item.author"
+                                                    width="200"
+                                                    trigger="hover"
+                                                    :content="item.description">
+                                                    <div slot="reference">
+                                                    <strong style="margin-right: 30px">Ver: {{ item.version }}</strong>
+                                                    <span>{{ item.time | truncDate}}</span>
+                                                    </div>
+                                                </el-popover>
+                                        </el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button size="small" type="success" @click="regressionAnalyze" :disabled="regression.disable">分析</el-button>
+                                </el-form-item> 
+                            </el-form>
+                        </el-container>
                     </el-card>
                     <el-row :gutter="20" style="margin:10px 0">
                         <el-col :span="18" style="padding:0;text-align:left">
@@ -440,15 +469,16 @@ import { EOVERFLOW } from 'constants';
                 regression:{          // 回归测试用的新旧版本 Jar 包
                     jarFiles: [],     // 新 Jar 包列表
                     info:{
-                        newJarName:'',
+                        newVersion:'',
                         packageName:'',
                     },
                     status:'选择新版本Jar包', // ui
-                    disable:false,           // ui
+                    disable: true,           // ui
                     oldcases:{},             // 所有的测试用例
                     chosedInfo:"",
                 },
-                regressionPackage: '',
+                // regressionPackage: '',
+                // newJarVersion: '',
                 oldvsnew:[],          // 用于新旧版本项目测试用例的对比
                 filterList:["remain", "affected"],    // 过滤回归测试结果测试用例
                 events:[],            // 脚本录制,
@@ -568,11 +598,11 @@ import { EOVERFLOW } from 'constants';
                     // 从 服务端 拉取 项目 列表
                     getUploadedFileList({prj_name: this.currentProj}).then(response => {
                         _this.uploadedFiles = response;
-                        getTestCaseList({prj_name: this.currentProj}).then(response=>{
-                            this.testCaseMap=response.result;
-                            this.getTestProject(this.currentJar);
-                            this.getRegressionProj(this.currentJar);
-                        })
+                        // getTestCaseList({prj_name: this.currentProj}).then(response=>{
+                        //     this.testCaseMap=response.result;
+                        //     this.getTestProject(this.currentJar);
+                        //     this.getRegressionProj(this.currentJar);
+                        // })
                     })
                 }
             },
@@ -661,7 +691,7 @@ import { EOVERFLOW } from 'constants';
                 }
             },
             uploadTestCaseSuccess(){
-                getTestCaseList({prj_name: this.currentProj}).then(response=>{
+                getTestCaseList({prj_name: this.currentProj, version: this.currentJar}).then(response=>{
                     this.testCaseMap=response.result;
                     this.getTestProject(this.currentJar)
                     this.openNewTestModal=false;
@@ -694,8 +724,11 @@ import { EOVERFLOW } from 'constants';
                 this.form.packages='';
                 this.form.packagesCall='';
                 this.activeTasks=["relation"];
-                this.getTestProject(prov);
-                this.getRegressionProj(prov);
+                getTestCaseList({prj_name: this.currentProj, version: this.currentJar}).then(response=>{
+                    this.testCaseMap = response.result;
+                    this.getTestProject(prov);
+                    this.getRegressionProj(prov);
+                })
             },
             deleteVer(idx){
                 deleteVersion({prj_name:this.currentProj, version: this.uploadedFiles[idx].version}).then(res=>{
@@ -1027,35 +1060,33 @@ import { EOVERFLOW } from 'constants';
 // --- card 回归测试
             // 选择要进行 回归测试 的项目
             getRegressionProj(prov) {
-                var prjName = prov.split('.')[0];
                 // 回归测试时获取旧版本的所有测试用例
-                if(this.testCaseMap[prjName])
-                    this.regression.oldcases[prov] = Object.keys(this.testCaseMap[prjName]) 
+                if(this.testCaseMap[prov])
+                    this.regression.oldcases[prov] = Object.keys(this.testCaseMap[prov]) 
                 else
                     this.regression.oldcases[prov]=[];
             },
-            fileListChange(file, fileList) {
-                if(fileList.length == 1){
-                    this.regression.info.newJarName = fileList[0].name;
-                    this.regression.status = '已选择';
-                    this.regression.disable = true;
-                }
-                else{
-                    this.regression.info.newJarName = '';
-                    this.regression.status = '选择新版本Jar包';
+            newJarChosen(jar) {
+                if(jar){
                     this.regression.disable = false;
                 }
+                else{
+                    this.regression.disable = true;
+                }
             },
-            uploadSucc(resp,file,filelist){
-                this.showMsg("上传'" + file.name + "'成功");
+            filteredFiles(){
+                return this.uploadedFiles.filter(ele=> ele.version!=this.currentJar);
+            },
+            // 改成现在的 逻辑
+            regressionAnalyze(){
                 // 保存历史记录
                 let option = {
-                    oldJarName: this.currentJar,
-                    newJarName: this.regression.info.newJarName,
+                    oldVersion: this.currentJar,
+                    newVersion: this.regression.info.newVersion,
                     packageName:this.regression.info.packageName,
-                    name:this.currentJar + " --> " + file.name
+                    name:this.currentJar + " --> " + this.regression.info.newVersion,
+                    prj_name: this.currentProj
                 }
-                this.history.regressionInfos
                 if(this.history.regressionInfos){
                     this.history.regressionInfos.push(option)
                     this.history.regressionInfos=this.history.regressionInfos.filter((element,index,array)=>{
@@ -1070,25 +1101,22 @@ import { EOVERFLOW } from 'constants';
                 // 自动获取分析结果
                 this.analyseJars(option);
             },
-            UploadJars(){
-                this.$refs.uploadjar.submit();
-            },
             analyseHistory(){
                 // 获取已上传的包的分析结果
                 let chosedInfo = this.history.regressionInfos.filter(info=>{return info.name === this.regression.chosedInfo})[0]
-                this.getRegressionProj(chosedInfo.oldJarName)
+                this.getRegressionProj(chosedInfo.oldVersion)
                 this.analyseJars(chosedInfo);
             },
             // 回归 测试 分析 函数
             // 应用场景：1. 点击 “上传” 按钮 后 触发
             //          2. 分析历史，点击 “分析” 按钮 后 触发
             analyseJars(para){
-                // 检查 oldJarName 这个项目的所有用例是否获取
+                // 检查 oldVersion 这个项目的所有用例是否获取
                     postRegression(para).then(response=> {
                         let newcases = response;                // "oldcases" is all testcases
                         this.filterList = ["remain", "affected"]         // set filter to all
                         this.oldvsnew = [];                              // refresh result
-                        this.regression.oldcases[para.oldJarName].forEach(testcase => {
+                        this.regression.oldcases[para.oldVersion].forEach(testcase => {
                             if(newcases.includes(testcase)){
                                 // 有影响的
                                 this.oldvsnew.push({
@@ -1103,25 +1131,26 @@ import { EOVERFLOW } from 'constants';
                                 })
                             }
                         })
+                        console.log(this.regression.oldcases)
                         // this.showoldvsnew = this.oldvsnew;
                     })
             },
 // -- card 回归测试
 
-// --- card 脚本录制
-            watchReplay(){
-                this.showReplay = true;
-                this.$refs.replayer.startPlay();
-            },
-            toggleReplay(){
-                this.$refs.replayer.togglePlay(this.isplay);
-                if (this.isplay)
-                    this.playandpause = '播放';
-                else
-                    this.playandpause = '暂停';
-                this.isplay = !this.isplay;
-            },
-// -- card 脚本录制
+// // --- card 脚本录制
+//             watchReplay(){
+//                 this.showReplay = true;
+//                 this.$refs.replayer.startPlay();
+//             },
+//             toggleReplay(){
+//                 this.$refs.replayer.togglePlay(this.isplay);
+//                 if (this.isplay)
+//                     this.playandpause = '播放';
+//                 else
+//                     this.playandpause = '暂停';
+//                 this.isplay = !this.isplay;
+//             },
+// // -- card 脚本录制
 
 // --- 整体
             showd3 () {
