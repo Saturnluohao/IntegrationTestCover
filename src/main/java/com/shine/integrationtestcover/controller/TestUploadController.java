@@ -202,7 +202,7 @@ public class TestUploadController {
 
     @RequestMapping(value = "/testCaseList", method = RequestMethod.GET)
     @ResponseBody
-    public HashMap<String, Object> getTestCaseList(String prj_name){
+    public HashMap<String, Object> getTestCaseList(String prj_name, String version){
         HashMap<String, HashMap<String, List<String>>> projectToTestFiles = new HashMap<>();
         String prj_dir = baseConfig.getTestCaseProjectPath(prj_name);
         prj_dir = prj_dir.substring(0,prj_dir.length()-1);
@@ -210,7 +210,9 @@ public class TestUploadController {
         if(uploadedProjectDirectory.isDirectory()) {
             File[] projectDirectorys = uploadedProjectDirectory.listFiles();//projectDirectorys 为 prj_name 项目的各个版本文件夹
             for (File projectDirectory : projectDirectorys) {//遍历每一个版本文件夹
-                String version = projectDirectory.getName();
+                //String version = projectDirectory.getName();
+                if(!projectDirectory.getName().equals(version))
+                    continue;
                 if(projectDirectory.isDirectory() && projectDirectory.listFiles().length > 0 && ProgramInstrumentService.situation.containsKey(new Pair<>(prj_name, version))) {
                     projectToTestFiles.put(projectDirectory.getName(), new HashMap<>());
                     File[] testFiles = projectDirectory.listFiles();//版本文件夹中的文件集合
