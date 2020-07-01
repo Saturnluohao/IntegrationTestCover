@@ -61,10 +61,10 @@
                                         :value="item.version">
                                         <el-popover
                                             placement="right"
-                                            :title="item.author"
+                                            :title="'作者：'+item.author"
                                             width="200"
                                             trigger="hover"
-                                            :content="item.description">
+                                            :content="'描述：'+item.description">
                                             <div slot="reference">
                                             <strong style="margin-right: 30px">Ver: {{ item.version }}</strong>
                                             <span>{{ item.time | truncDate}}</span>
@@ -179,6 +179,40 @@
                     </el-card>
                     </el-collapse-item>
 
+                <el-collapse-item class="titlestyle" title="添加新节点" name="addNode" :class="JSON.stringify(relation)=='{}'?'disabled': ''">
+                    <template slot="title">
+                        <p class="itemname">添加新节点</P>
+                        <p class="require-info">（请先生成调用关系图）</P>
+                    </template>
+                    <el-card :body-style="{ padding: '0px' }" class="card">
+                        <el-container class="formbody">
+                            <el-form ref="form" :model="selectTestForm" label-width="80px">
+                                <el-form-item label="现有节点">
+                                    <el-cascader
+                                        v-model="cascaderNode"
+                                        :options="cascaderClassMethod"
+                                        @change="selectNode">
+                                    </el-cascader>
+                                </el-form-item>
+                                <el-form-item label="新节点">
+                                    <el-input type="textarea" v-model="newnode" placeholder="请输入新节点名称"></el-input>
+                                </el-form-item>
+                                <el-form-item label="类型选择">
+                                    <el-select v-model="selectednodetype" filterable placeholder="请选择节点类型" @change="getnodetype()">
+                                        <el-option label="数据库" value="1"> </el-option>
+                                        <el-option label="外设" value="2"> </el-option>
+                                        <el-option label="前端" value="3"> </el-option>
+                                        <el-option label="其他系统" value="4"> </el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button type="primary" @click="createNewNode()">立即创建</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </el-container>
+                    </el-card>
+                    </el-collapse-item>
+
                 <el-collapse-item class="titlestyle" name="runTest" :class="JSON.stringify(relation)=='{}'?'disabled': ''">
                     <template slot="title">
                         <p class="itemname">运行测试用例</P>
@@ -224,13 +258,12 @@
                                 </el-form>
                             </el-container>
                         </el-card>
-
                 </el-collapse-item>
 
-                <el-collapse-item class="titlestyle" name="coverage" :class="JSON.stringify(relation)=='{}'?'disabled': ''">
+                <el-collapse-item class="titlestyle" name="coverage" :class="!taskId?'disabled': ''">
                     <template slot="title">
                         <p class="itemname">未覆盖测试用例</P>
-                        <p class="require-info">（请先生成调用关系图）</P>
+                        <p class="require-info">（请先执行测试用例）</P>
                     </template>
                         <el-card :body-style="{ padding: '0px' }" class="card">
                             <el-container class="formbody">
@@ -259,37 +292,11 @@
                         </el-card>
                 </el-collapse-item>
 
-                    <el-collapse-item class="titlestyle" title="添加新节点" name="addNode">
-                    <el-card :body-style="{ padding: '0px' }" class="card">
-                        <el-container class="formbody">
-                            <el-form ref="form" :model="selectTestForm" label-width="80px">
-                                <el-form-item label="现有节点">
-                                    <el-cascader
-                                        v-model="cascaderNode"
-                                        :options="cascaderClassMethod"
-                                        @change="selectNode">
-                                    </el-cascader>
-                                </el-form-item>
-                                <el-form-item label="新节点">
-                                    <el-input type="textarea" v-model="newnode" placeholder="请输入新节点名称"></el-input>
-                                </el-form-item>
-                                <el-form-item label="类型选择">
-                                    <el-select v-model="selectednodetype" filterable placeholder="请选择节点类型" @change="getnodetype()">
-                                        <el-option label="数据库" value="1"> </el-option>
-                                        <el-option label="外设" value="2"> </el-option>
-                                        <el-option label="前端" value="3"> </el-option>
-                                        <el-option label="其他系统" value="4"> </el-option>
-                                    </el-select>
-                                </el-form-item>
-                                <el-form-item>
-                                    <el-button type="primary" @click="createNewNode()">立即创建</el-button>
-                                </el-form-item>
-                            </el-form>
-                        </el-container>
-                    </el-card>
-                    </el-collapse-item>
-
-                    <el-collapse-item class="titlestyle" title="回归测试" name="regression">
+                    <el-collapse-item class="titlestyle" title="回归测试" name="regression" :class="!taskId?'disabled': ''">
+                    <template slot="title">
+                        <p class="itemname">回归测试</P>
+                        <p class="require-info">（请先执行测试用例）</P>
+                    </template>
                     <el-card :body-style="{ padding: '0px 5px' }" class="card">
                         <!-- 考虑 添加 自动 补全 -->
                         <el-container class="formbody">
@@ -307,10 +314,10 @@
                                                 :value="item.version">
                                                 <el-popover
                                                     placement="right"
-                                                    :title="item.author"
+                                                    :title="'作者：'+item.author"
                                                     width="200"
                                                     trigger="hover"
-                                                    :content="item.description">
+                                                    :content="'描述：'+item.description">
                                                     <div slot="reference">
                                                     <strong style="margin-right: 30px">Ver: {{ item.version }}</strong>
                                                     <span>{{ item.time | truncDate}}</span>
